@@ -1,0 +1,389 @@
+<html>
+    <head>
+        <title>poker</title>
+    </head>
+
+    <body>
+        <div>
+            내 ID
+            <u id="my_id"></u><br>
+            내 돈
+            <u id="my_money">1억</u>
+            <hr>
+        </div>
+        <div>
+            룸ID
+            <input type="number" id="room_id" placeholder="룸번호를 입력해주세요." value="123" />
+            <Button id="room_create_btn">접속</Button>
+            <Button id="room_leave_btn">나가기</Button>
+        </div>
+        <hr>
+        <div>
+            유저정보 : 
+            <u id="users">
+            </u>
+        </div>
+        <hr>
+        <div>
+            게임시작 : 
+            <button id="game_start_btn" style="display:none;">게임시작</button>
+            <hr>
+        </div>
+        <div id="choice_div">
+            초이스 카드들<br>
+            <u id="choice0">0</u> <button onclick="choiceSel(0)">선택</button><button onclick="choiceRemove(0)">삭제</button><br>
+            <u id="choice1">1</u> <button onclick="choiceSel(1)">선택</button><button onclick="choiceRemove(1)">삭제</button><br>
+            <u id="choice2">2</u> <button onclick="choiceSel(2)">선택</button><button onclick="choiceRemove(2)">삭제</button><br>
+            <u id="choice3">3</u> <button onclick="choiceSel(3)">선택</button><button onclick="choiceRemove(3)">삭제</button><br><br>
+            선택결과:<u id="choiceResult"></u> <button onclick="choiceSend()">초이스 선택 보내기</button>
+            <hr>
+        </div>
+        <div>
+            <p>카드 정보</p>
+            <u id="user1">user1</u><u id="cards1"></u><br>
+            <u id="user2">user2</u><u id="cards2"></u><br>
+            <u id="user3">user3</u><u id="cards3"></u><br>
+            <u id="user4">user4</u><u id="cards4"></u><br>
+            <u id="my">내 카드들</u><u id="my-cards"></u>
+            <hr>
+        </div>
+        <div id="betting_box" style="display : none;">
+            <button id="btn1" onclick="betting('die')">다이</button>
+            <button id="btn2" onclick="betting('bing')">삥</button>
+            <button id="btn3" onclick="betting('double')">따당</button>
+            <button id="btn4" onclick="betting('call')">콜</button>
+            <button id="btn5" onclick="betting('quater')">쿼터</button>
+            <button id="btn6" onclick="betting('half')">하프</button>
+            <hr>
+        </div>
+        <div>
+            턴 : <div id="turn"></div>
+            누구차례 : <div id="currentUserId"></div>
+            콜 : <div id="mycall"></div>
+            팟 : <div id="pot"></div>
+            <hr>
+        </div>
+        <div>
+            <u>마지막베팅정보</u><br>
+            누가: <div id="bet_user_id"></div>
+            얼마: <div id="bet_price"></div>
+        </div>
+        <hr>
+        <div>
+            <u>게임결과</u><br>
+            위너: <div id="winner"></div>
+            초기화 <button id="init">초기화</button>
+        </div>
+        <hr>
+
+        <script src="/assets/js/jquery.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            //game info
+            let userList;
+            let myId;
+            let choiceRemoveId = -1; 
+            let choiceOpenId = -1;
+            let choiceCards;
+            let myMoney = 100000000;
+            let currentId = '';
+
+            function choiceSel(idx) {
+                choiceOpenId = idx;
+                console.log("choice sel = " + idx);
+                $('#choiceResult').html(`sel ${choiceOpenId} / remove ${choiceRemoveId}`);
+            }
+
+            function choiceRemove(idx) {
+                choiceRemoveId = idx;
+                console.log("choice remove = " + idx);
+                $('#choiceResult').html(`sel ${choiceOpenId} / remove ${choiceRemoveId}`);
+            }
+
+            function getCardName(card) {
+                let s = "";
+                let n = "";
+                if(card.shape == "S") {
+                    s = "♠";
+                } else if(card.shape == "D") {
+                    s = "◆"
+                } else if(card.shape == "H") {
+                    s = "♥"
+                } else if(card.shape == "C") {
+                    s = "♣"
+                }
+                if(card.number == 1) {
+                    n = "A";
+                } else if(card.number == "11") {
+                    n = "J";
+                } else if(card.number == "12") {
+                    n = "Q";
+                } else if(card.number == "13") {
+                    n = "K";
+                } else {
+                    n = String(card.number);
+                }
+                if(card.isShow) {
+                    return s+n;
+                }
+                return `[${s+n}]`;
+            }
+
+            function displayMyCard(cards) {
+                let info = "";
+                for(var c of cards) {
+                    info += ` / ${getCardName(c)}`;
+                }
+                $('#my-cards').html(info);
+            }
+
+            function displayUserCard(cards) {
+                var idx = 0;
+                for(var u of userList) {
+                    if(u === myId) {
+                        continue;
+                    }
+                    idx += 1;
+                    let info = "";
+                    for(var c of cards[u]) {
+                        info += ` / ${getCardName(c)}`;
+                    }
+                    $('#cards' + idx).html(info);
+                }
+            }
+
+            
+
+        </script>
+        <script>
+            var socket = io();
+            var joinRoomId = null;
+
+            socket.on('welcome', ({id}) => {
+                myId = id;
+                $('#my_id').html(id);
+            });
+
+            socket.on("room_join", ({result, error}) => {
+                console.log("room join is " + result);
+                if(error) {
+                    joinRoomId = null;
+                    alert("room join is fail / " + error);
+                    return;
+                } else {
+                    alert("room join is " + result);
+                }
+            });
+
+            socket.on("room_leave", ({result}) => {
+                if(result === "success") {
+                    joinRoomId = null;
+                }
+                alert("room leave is " + result);
+            });
+
+            socket.on('user_info', ({users, result}) => {
+                let isJoin = false;
+                if(users.length > 0) {
+                    if(users[0] === myId) {
+                        $("#game_start_btn").css('display', 'inline-block');
+                    }
+                }
+                for(var u of users) {
+                    if(u === myId) {
+                        isJoin = true;
+                        break;
+                    }
+                }
+                if(isJoin) {
+                    userList = users;
+                    $("#users").html(JSON.stringify(users));
+                } else {
+                    userList = [];
+                    $("#users").html(JSON.stringify(userList));
+                }
+            });
+
+            //choice
+            socket.on("choice", ({cards}) => {
+                init();
+                console.log("choice cards ");
+                console.log(cards);
+                choiceCards = cards;
+                //TO-DO: 선택해서 다시 보내주는거 구현
+                for(var i=0;i<cards.length;i++) {
+
+                    let name = cards[i].shape + cards[i].number;
+                    $('#choice' + i).html(name);
+                    
+                }
+
+            });
+
+            //give
+            socket.on('give_my_card_info', ({cards}) => {
+
+                console.log('give_my_card_info');
+                console.log(cards);
+                displayMyCard(cards);
+
+            });
+
+            socket.on('give_user_card_info', ({cards}) => {
+
+                console.log('give_user_card_info');
+                console.log(cards);
+                displayUserCard(cards);
+
+            });
+
+
+            
+            //boss
+            socket.on('boss', ({bossId}) => {
+
+                console.log("boss id is " + bossId);
+                currentId = bossId;
+
+            });
+
+            socket.on('bettingInfo', ({currentUserId, userId, userList, pot, maxCall, callList, betPrice, turn, hasBetCnt}) => {
+
+                    console.log('=========');
+                    console.log(`currentUserId ${currentUserId}  userId ${userId}`);
+                    console.log(`pot ${pot}  maxCall ${maxCall}  betPrice ${betPrice}`);
+                    console.log('=========');
+                    console.log(callList);
+                    let myCall = parseInt(maxCall) - callList[myId]; 
+                    console.log('mycall = ' + myCall);
+                    $('#mycall').html(myCall);
+                    $('#pot').html(pot);
+                    $('#betting_box').css('display', 'none');
+                    $('#turn').html(turn);
+                    if(currentUserId != null) {
+                        $('#currentUserId').html(currentUserId);
+                        if(currentUserId == myId) {
+                            $('#betting_box').css('display', 'block');
+                            if(hasBetCnt) {
+                                for(var i=1;i<=6;i++) {
+                                    $('#btn' + i).css('display', 'inline-block');
+                                }
+                            } else {
+                                for(var i=1;i<=6;i++) {
+                                    $('#btn' + i).css('display', 'none');
+                                }
+                                $('#btn1').css('display', 'inline-block');
+                                $('#btn4').css('display', 'inline-block');
+                            }
+                        }
+                        return;
+                    }
+
+                    $('#bet_user_id').html(userId);
+                    $('#bet_price').html(betPrice);
+            });
+
+            socket.on('betting', ({userId, type}) => {
+
+                console.log(`userId ${userId}   type ${type}`);
+
+            });
+
+
+            socket.on('gameover', ({userList, userCard, winner}) => {
+
+                console.log('winner is ' + winner);
+                console.log(userCard);
+                $('#winner').html(winner);
+            });
+
+        </script>
+        <script>
+            $("#room_create_btn").click(()=>{
+                if(joinRoomId != null) {
+                    alert('ERROR : already join room is ' + joinRoomId);
+                    return;
+                }
+                const roomId = $('#room_id').val();
+                console.log("ENTERED ROOM ID : " + roomId);
+                joinRoomId = roomId;
+                socket.emit("room_join",{
+                    id:roomId
+                });
+            });
+
+            $('#room_leave_btn').click(()=>{
+                if(joinRoomId == null) {
+                    return;
+                }
+
+                socket.emit("room_leave", {
+                    id:joinRoomId
+                });
+
+                $('#room_id').val("");
+
+            });
+
+            $("#game_start_btn").click(()=> {
+                init();
+                if(myId != null && userList != null && userList.length > 1) {
+                    socket.emit("game_start");
+                } else {
+                    alert("can't start yet.");
+                }
+
+            });
+
+            $("#init").click(() => {
+                init();   
+            });
+
+            function choiceSend() {
+
+                let cards = [];
+                for(var i=0;i<choiceCards.length;i++) {
+                    if(i == choiceRemoveId) {
+                        continue;
+                    }
+                    if(i == choiceOpenId) {
+                        choiceCards[i].isShow = true;
+                    }
+                    cards.push(choiceCards[i]);
+                }
+                console.log(cards);
+                socket.emit("choice", {
+                    cards : cards
+                });
+                
+            }
+
+            function betting(type) {
+                socket.emit('betting', {
+                    userId:myId,
+                    type:type
+                });
+            }
+
+            function init() {
+                for(var i=0;i<4;i++) {
+                    $('#choice' + i).html("");
+                }
+                $('#choiceResult').html("");
+                $('#my-cards').html("");
+                for(var i=1;i<=4;i++) {
+                    $('#cards' + i).html("");
+                }
+                $('#mycall').html("");
+                $('#pot').html("");
+                $('#betting_box').css('display', 'none');
+                $('#turn').html("");
+                $('#currentUserId').html("");
+                $('#bet_user_id').html("");
+                $('#bet_price').html("");
+                $('#winner').html("");
+            }
+        </script>
+    </body>
+
+</html>

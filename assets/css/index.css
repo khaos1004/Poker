@@ -1,0 +1,16 @@
+body {
+    margin:0px;
+    padding:0px;
+    background-color: black;
+}
+
+
+.backimg {
+    position: absolute;
+    top:0px;
+    left:0px;
+}
+
+.content {
+    background-color: black; position:absolute;
+}
