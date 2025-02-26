@@ -1,911 +1,1100 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#000000" />
-        <title>TomatoSevenPoker</title>
-        <link rel="stylesheet" href="./assets/css/index.css">
-    </head>
-    <body onload="init()">    
-        
-        <div style="background-color: gray; position: absolute; top:0px; ">
-            <div>
-                내 ID
-                <u id="my_id"></u><br>
-                <hr>
-            </div>
-            <div>
-                룸ID11
-                <input type="number" id="room_id" placeholder="룸번호를 입력해주세요." value="123" />
-                <Button id="room_create_btn">접속</Button>
-                <Button id="room_leave_btn">나가기</Button>
-            </div>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#000000" />
+    <title>TomatoSevenPoker</title>
+    <link rel="stylesheet" href="./assets/css/index.css">
+</head>
+
+<body onload="init()">
+    <div id="z-call" style=" position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); 
+            padding: 20px; border-radius: 10px; text-align: center; z-index: 9999;">
+        <!-- <div>
+            내 ID
+            <u id="my_id"></u><br>
+            <hr>
+        </div> -->
+        <div>
+            <h2 style="font-size: 24px; color: white; margin-bottom: 10px;">방 이름</h2>
+        </div>
+        <div>
+            <input type="text" id="room_id" placeholder="방이름을 입력해주세요." value="456" />
         </div>
 
-
-        <div id=content class="content">
-
-            
-            <div id="dark" style="background-color: black; width:1920px; height:1080px; z-index: 98; position:absolute; top:0px; left:0px; opacity: 0.7; display: none;"></div>
-            <div id="gameover" style="z-index:99; position:absolute; display: none;">
-                <p style="text-align: center; color:white; width:1920px; font-size: 40px;" id="winner-info">님이 이겼습니다.</p>
-                <p style="text-align: center; color:white; width:1920px; font-size: 100px;" id="winner-result">WIN</p>
-                <button onclick="restart()" style="position:absolute; left:710px; top:400px; font-size: 40px; width:500px; height:150px; border-radius: 40px; background-color: #c92800; color:white;">다시하기</button>
+        <div id="room_list_container" style="text-align: center; margin: 20px auto; width: 300px;">
+            <h2 style="font-size: 24px; color: white; margin-bottom: 10px;">대기중인 방</h2>
+            <div id="room_list"
+                style="border: 2px solid #555; border-radius: 8px; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 15px;">
             </div>
-            <div id="choice-box" style="z-index:99; position:absolute; display: none;">
-                <p style="text-align: center; color:white; width:1920px; font-size: 50px;">오픈카드 한장과 버릴카드 한장을 골라주세요.</p>
-                <div style="width:240px; height:360px; background-color: white; position: absolute;
-                border-radius: 10px; top:360px; left:380px; border:5px solid #dedede;" id="c-1" onclick="choiceSelect(1)">
-                    <div id="c-n-1" style="font-size:70px; font-weight: bold; position: absolute; left:10px;">10</div>
-                    <div id="c-s-1" style="font-size:180px;left:30px;position:absolute;top:40px;">♣</div>
-                </div>
-                <div style="width:240px; height:360px; background-color: white; position: absolute;
-                border-radius: 10px; top:360px; left:680px; border:5px solid #dedede;" id="c-2" onclick="choiceSelect(2)">
-                    <div id="c-n-2" style="font-size:70px; font-weight: bold; position: absolute; left:10px;">10</div>
-                    <div id="c-s-2" style="font-size:180px;left:30px;position:absolute;top:40px;">♣</div>
-                </div>
-                <div style="width:240px; height:360px; background-color: white; position: absolute;
-                border-radius: 10px; top:360px; left:980px; border:5px solid #dedede;" id="c-3" onclick="choiceSelect(3)">
-                    <div id="c-n-3" style="font-size:70px; font-weight: bold; position: absolute; left:10px;">10</div>
-                    <div id="c-s-3" style="font-size:180px;left:30px;position:absolute;top:40px;">♣</div>
-                </div>
-                <div style="width:240px; height:360px; background-color: white; position: absolute;
-                border-radius: 10px; top:360px; left:1280px; border:5px solid #dedede;" id="c-4" onclick="choiceSelect(4)">
-                    <div id="c-n-4" style="font-size:70px; font-weight: bold; position: absolute; left:10px;">10</div>
-                    <div id="c-s-4" style="font-size:180px;left:30px;position:absolute;top:40px;">♣</div>
-                </div>
-                <p style="text-align: center; color:white; width:1920px; font-size: 50px;" id="c-info">오픈카드 :  / 버릴카드 : </p>
-                <button onclick="choiceSend()" style="position:absolute; left:710px; top:800px; font-size: 40px; width:500px; height:150px; border-radius: 40px; background-color: #006d40; color:white;">선택완료</button>
-            </div>
-            <div id="choice-box-waiting" style="z-index:99; position:absolute; display: none;">
-                <p style="text-align: center; color:white; width:1920px; font-size: 50px;">다른 플레이어 선택을 기다리는 중입니다.</p>
-            </div>
+        </div>
+        <hr>
+        <div>
+            <button id="room_create_btn">접속</button>
+            <button id="room_leave_btn">나가기</button>
+        </div>
+    </div>
+    <div id="room_buttons"
+        style="display: none; position: fixed; top: 50%; left: 50%; z-index: 10000; width: max-content; transform: translate(-50%, -50%)">
+        <button id="room_leave_btn_main" style="padding: 20px 30px; font-size: 16px; border-radius: 8px; background-color: #ff4d4d; color: white; 
+                   border: none; cursor: pointer; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); ">
+            방 나가기
+        </button>
+    </div>
 
-            <img src="./assets/img/back.png" class="backimg">
-            
-    
-            <div style="width:600px; height:250px; background-color: black; position: absolute;
+    <div id=content class="content">
+        <div id="dark"
+            style="background-color: black; width:1920px; height:1080px; z-index: 98; position:absolute; top:0px; left:0px; opacity: 0.7; display: none;">
+        </div>
+        <div id="gameover" style="z-index:99; position:absolute; display: none;">
+            <p style="text-align: center; color:white; width:1920px; font-size: 40px;" id="winner-info">님이 이겼습니다.</p>
+            <p style="text-align: center; color:white; width:1920px; font-size: 100px;" id="winner-result">WIN</p>
+            <button onclick="restart()"
+                style="position:absolute; left:710px; top:400px; font-size: 40px; width:500px; height:150px; border-radius: 40px; background-color: #c92800; color:white;">다시하기</button>
+        </div>
+        <div id="choice-box" style="z-index:99; position:absolute; display: none;">
+            <p style="text-align: center; color:white; width:1920px; font-size: 50px;">오픈카드 한장과 버릴카드 한장을 골라주세요.</p>
+            <div style="width:240px; height:360px; background-color: white; position: absolute;
+                border-radius: 10px; top:360px; left:380px; border:5px solid #dedede;" id="c-1"
+                onclick="choiceSelect(1)">
+                <div id="c-n-1" style="font-size:70px; font-weight: bold; position: absolute; left:10px;">10</div>
+                <div id="c-s-1" style="font-size:180px;left:30px;position:absolute;top:40px;">♣</div>
+            </div>
+            <div style="width:240px; height:360px; background-color: white; position: absolute;
+                border-radius: 10px; top:360px; left:680px; border:5px solid #dedede;" id="c-2"
+                onclick="choiceSelect(2)">
+                <div id="c-n-2" style="font-size:70px; font-weight: bold; position: absolute; left:10px;">10</div>
+                <div id="c-s-2" style="font-size:180px;left:30px;position:absolute;top:40px;">♣</div>
+            </div>
+            <div style="width:240px; height:360px; background-color: white; position: absolute;
+                border-radius: 10px; top:360px; left:980px; border:5px solid #dedede;" id="c-3"
+                onclick="choiceSelect(3)">
+                <div id="c-n-3" style="font-size:70px; font-weight: bold; position: absolute; left:10px;">10</div>
+                <div id="c-s-3" style="font-size:180px;left:30px;position:absolute;top:40px;">♣</div>
+            </div>
+            <div style="width:240px; height:360px; background-color: white; position: absolute;
+                border-radius: 10px; top:360px; left:1280px; border:5px solid #dedede;" id="c-4"
+                onclick="choiceSelect(4)">
+                <div id="c-n-4" style="font-size:70px; font-weight: bold; position: absolute; left:10px;">10</div>
+                <div id="c-s-4" style="font-size:180px;left:30px;position:absolute;top:40px;">♣</div>
+            </div>
+            <p style="text-align: center; color:white; width:1920px; font-size: 50px;" id="c-info">오픈카드 : / 버릴카드 : </p>
+            <button onclick="choiceSend()"
+                style="position:absolute; left:710px; top:800px; font-size: 40px; width:500px; height:150px; border-radius: 40px; background-color: #006d40; color:white;">선택완료</button>
+        </div>
+        <div id="choice-box-waiting" style="z-index:99; position:absolute; display: none;">
+            <p style="text-align: center; color:white; width:1920px; font-size: 50px;">다른 플레이어 선택을 기다리는 중입니다.</p>
+        </div>
+
+        <img src="./assets/img/back.png" class="backimg">
+
+
+        <div style="width:600px; height:250px; background-color: black; position: absolute;
             top:100px; left:50px; opacity: 0.4; border-radius: 10px;" class="space" id="space1">
-            </div>
-            <div style="position:absolute; top:5px; left:20px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none;" id="user1-boss">B</div>
-            <div style="position:absolute; top:40px; left:50px; width:600px; color:white; font-size: 40px; opacity: 0.4;" id="user1-text"></div>
-            <div style="position:absolute; top:40px; left:50px; width:600px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;" id="user1-bet"></div>
-            
-            <div style="width:600px; height:250px; background-color: black; position: absolute;
+        </div>
+        <div style="position:absolute; top:5px; left:20px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none;"
+            id="user1-boss">B</div>
+        <div style="position:absolute; top:40px; left:50px; width:600px; color:white; font-size: 40px; opacity: 0.4;"
+            id="user1-text"></div>
+        <div style="position:absolute; top:40px; left:50px; width:600px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;"
+            id="user1-bet"></div>
+
+        <div style="width:600px; height:250px; background-color: black; position: absolute;
             top:450px; left:50px; opacity: 0.4; border-radius: 10px;" class="space" id="space2">
-            </div>
-            <div style="position:absolute; top:355px; left:20px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none; " id="user2-boss">B</div>
-            <div style="position:absolute; top:390px; left:50px; width:600px; color:white; font-size: 40px; opacity: 0.4;" id="user2-text"></div>
-            <div style="position:absolute; top:390px; left:50px; width:600px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;" id="user2-bet"></div>
-    
-            <div style="width:600px; height:250px; background-color: black; position: absolute;
+        </div>
+        <div style="position:absolute; top:355px; left:20px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none; "
+            id="user2-boss">B</div>
+        <div style="position:absolute; top:390px; left:50px; width:600px; color:white; font-size: 40px; opacity: 0.4;"
+            id="user2-text"></div>
+        <div style="position:absolute; top:390px; left:50px; width:600px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;"
+            id="user2-bet"></div>
+
+        <div style="width:600px; height:250px; background-color: black; position: absolute;
             top:100px; left:1271px; opacity: 0.4; border-radius: 10px;" class="space" id="space3">
-            </div>
-            <div style="position:absolute; top:5px; left:1241px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none;" id="user3-boss">B</div>
-            <div style="position:absolute; top:40px; left:1271px; width:600px; color:white; font-size: 40px; opacity: 0.4;" id="user3-text"></div>
-            <div style="position:absolute; top:40px; left:1271px; width:600px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;" id="user3-bet"></div>
-    
-            <div style="width:600px; height:250px; background-color: black; position: absolute;
+        </div>
+        <div style="position:absolute; top:5px; left:1241px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none;"
+            id="user3-boss">B</div>
+        <div style="position:absolute; top:40px; left:1271px; width:600px; color:white; font-size: 40px; opacity: 0.4;"
+            id="user3-text"></div>
+        <div style="position:absolute; top:40px; left:1271px; width:600px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;"
+            id="user3-bet"></div>
+
+        <div style="width:600px; height:250px; background-color: black; position: absolute;
             top:450px; left:1271px; opacity: 0.4; border-radius: 10px;" class="space" id="space3">
-            </div>
-            <div style="position:absolute; top:355px; left:1241px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none;" id="user4-boss">B</div>
-            <div style="position:absolute; top:390px; left:1271px; width:600px; color:white; font-size: 40px; opacity: 0.4;" id="user4-text"></div>
-            <div style="position:absolute; top:390px; left:1271px; width:600px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;" id="user4-bet"></div>
-    
-            <div style="width:700px; height:300px; background-color: black; position: absolute;
+        </div>
+        <div style="position:absolute; top:355px; left:1241px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none;"
+            id="user4-boss">B</div>
+        <div style="position:absolute; top:390px; left:1271px; width:600px; color:white; font-size: 40px; opacity: 0.4;"
+            id="user4-text"></div>
+        <div style="position:absolute; top:390px; left:1271px; width:600px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;"
+            id="user4-bet"></div>
+
+        <div style="width:700px; height:300px; background-color: black; position: absolute;
             top:750px; left:610.5px; opacity: 0.4; border-radius: 10px;" class="space" id="space3">
-            </div>
-            <div style="position:absolute; top:690px; left:555px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none;" id="my-boss">B</div>
-            <div style="position:absolute; top:690px; left:610.5px; width:700px; color:white; font-size: 47px; opacity: 0.4;" id="myid-text" >테스트님</div>
-            <div style="position:absolute; top:690px; left:610.5px; width:700px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;" id="myid-bet"></div>
-    
-    
-    
-            
-            <div style="width:120px; height:180px; background-color: gray; position: absolute;
+        </div>
+        <div style="position:absolute; top:690px; left:555px; width:50px; height:50px; text-align:center; border-radius: 50px; color:rgb(212, 0, 0); background-color: rgb(224, 181, 181); font-size: 40px; display: none;"
+            id="my-boss">B</div>
+        <div style="position: absolute; top: 690px; left: 610.5px; width: 700px; color: white; font-size: 47px; 
+            opacity: 0.4; text-align: center; line-height: 1.5;" id="myid-text"></div>
+        <div style="position:absolute; top:690px; left:610.5px; width:700px; color:rgb(238, 255, 0); text-align: right; font-size: 40px; opacity: 1; font-weight: bold;"
+            id="myid-bet"></div>
+
+
+
+
+        <div style="width:120px; height:180px; background-color: gray; position: absolute;
                 border-radius: 10px; top:-60px; left:840.5px; border:5px solid #dedede;"></div>
-            <div style="width:120px; height:180px; background-color: gray; position: absolute;
+        <div style="width:120px; height:180px; background-color: gray; position: absolute;
             border-radius: 10px; top:-70px; left:850.5px; border:5px solid #dedede;"></div>
-            <div style="width:120px; height:180px; background-color: gray; position: absolute;
+        <div style="width:120px; height:180px; background-color: gray; position: absolute;
             border-radius: 10px; top:-80px; left:830.5px; border:5px solid #dedede;"></div>
-            <div id="test" style="width:120px; height:180px; background-color: gray; position: absolute;
+        <div id="test" style="width:120px; height:180px; background-color: gray; position: absolute;
             border-radius: 10px; top:-90px; left:850.5px; border:5px solid #dedede;"></div>
-            
-            <div style="width:1921px; height:100px; background-color: black; position: absolute;
+
+        <div style="width:1921px; height:100px; background-color: black; position: absolute;
             top:-100px; left:0px; z-index: 10;"></div>
-    
-    
-
-            <img id="game_start_btn" src="/assets/img/start.png" width="500" style="position:absolute; top:400px; left:710.5px; display: none; z-index:99; ">
 
 
-            <div id="pot-box" style="display:none;">
-                <div style="width:400px; height:150px; position:absolute; top:400px; left:752.5px; 
+
+        <img id="game_start_btn" src="/assets/img/start.png" width="500"
+            style="position:absolute; top:300px; left:710.5px; display: none; z-index:99; ">
+
+
+        <div id="pot-box" style="display:none;">
+            <div style="width:400px; height:150px; position:absolute; top:400px; left:752.5px; 
                 border-radius: 20px; border: 3px solid rgb(216, 216, 130); font-size: 30px;color:rgb(216, 216, 130);
                 font-weight: bold; line-height: 20px; background-color: black; opacity: 0.5;">
-                <br>&nbsp;&nbsp;POT&nbsp;&nbsp;&nbsp;<br><br><br><br>&nbsp;&nbsp;<div style="display:inline-block; color:white;">CALL</div>&nbsp;&nbsp;&nbsp;
-                </div>
-        
-                <div style="width:380px; height:150px; position:absolute; top:360px; left:752.5px; 
+                <br>&nbsp;&nbsp;POT&nbsp;&nbsp;&nbsp;<br><br><br><br>&nbsp;&nbsp;<div
+                    style="display:inline-block; color:white;">CALL</div>&nbsp;&nbsp;&nbsp;
+            </div>
+
+            <div style="width:380px; height:150px; position:absolute; top:360px; left:752.5px; 
                 border-radius: 20px;font-size: 40px;color:rgb(216, 216, 130); 
                 font-weight: bold; line-height: 150px; text-align: right; padding-right: 20px;" id="pot">0</div>
-                <div style="width:380px; height:150px; position:absolute; top:440px; left:752.5px; 
+            <div style="width:380px; height:150px; position:absolute; top:440px; left:752.5px; 
                 border-radius: 20px;font-size: 40px;color:white;
                 font-weight: bold; line-height: 150px; text-align: right; padding-right: 20px;" id="mycall">0</div>
-            </div>
-    
-    
-            <div id="user1-area"></div>
-            <div id="user2-area"></div>
-            <div id="user3-area"></div>
-            <div id="user4-area"></div> 
-    
-            <div id="mycard-area">
-            </div>
-
-    
-            <div style="width:500px; height:300px; position:absolute; top:750px; left:50px;
-            background-color: black; opacity:0.5 ; border-radius: 10px; font-size: 30px; color:white;
-            padding-left: 30px;">
-            </div>
-            <div style="width:500px; height:300px; position:absolute; top:750px; left:50px;
-            border-radius: 10px; font-size: 30px; color:white;
-            padding-left: 30px;padding-top: 10px;" id="mylevel-box">
-            </div>             
-            
-    
-            <div style="width:500px; height:300px; position:absolute; top:750px; left:1370px;border-radius: 10px; color:white;" id="betting_box">
-                <div style="width:200px; height:100px; background-color: #a33b0a; color:white; border-radius: 20px;
-                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;" onclick="betting('double')" id="btn6">따당</div>
-                <div style="width:200px; height:100px; background-color: #96023f; color:white; border-radius: 20px;
-                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;" onclick="betting('bing')" id="btn5">삥</div>
-                <div style="width:200px; height:100px; background-color: #880000; color:white; border-radius: 20px;
-                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;" onclick="betting('quater')" id="btn3">쿼터</div>
-                <div style="width:200px; height:100px; background-color: #ffffff; color:black; border-radius: 20px;
-                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;" onclick="betting('call')" id="btn1">콜</div>
-                <div style="width:200px; height:100px; background-color: #000000; color:white; border-radius: 20px;
-                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;" onclick="betting('half')" id="btn2">하프</div>
-                <div style="width:200px; height:100px; background-color: #4d3e00; color:white; border-radius: 20px;
-                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;" onclick="betting('die')" id="btn4">다이</div>
-                
-            </div>
         </div>
 
-        <script src="/assets/js/jquery.min.js"></script>
-        <script src="/socket.io/socket.io.js"></script>
-        <script>
-            //game info
-            let userList;
-            let myId;
-            let choiceRemoveId = -1; 
-            let choiceOpenId = -1;
-            let choiceCards;
-            let myMoney = 100000000;
-            let currentId = '';
-            let oname = "";
-            let rname = "";
+
+        <div id="user1-area"></div>
+        <div id="user2-area"></div>
+        <div id="user3-area"></div>
+        <div id="user4-area"></div>
+
+        <div id="mycard-area">
+        </div>
 
 
-            function choiceSelect(idx) {    
-                if(choiceOpenId == -1 || choiceRemoveId != -1) {
-                    choiceOpenId = idx - 1;
-                    choiceRemoveId = -1;
-                    oname = getCardName(choiceCards[choiceOpenId]);
-                    rname = "";
-                } else if(choiceOpenId != -1 && choiceRemoveId == -1) {
-                    choiceRemoveId = idx - 1;
-                    rname = getCardName(choiceCards[choiceRemoveId]);
-                }
-                let info = `오픈카드 : ${oname} / 버릴카드 : ${rname}`;
-                $('#c-info').html(info);
-            }
+        <div style="width:500px; height:300px; position:absolute; top:750px; left:50px;
+            background-color: black; opacity:0.5 ; border-radius: 10px; font-size: 30px; color:white;
+            padding-left: 30px;">
+        </div>
+        <div style="width:500px; height:300px; position:absolute; top:750px; left:50px;
+            border-radius: 10px; font-size: 30px; color:white;
+            padding-left: 30px;padding-top: 10px;" id="mylevel-box">
+        </div>
 
-            function choiceSel(idx) {
-                choiceOpenId = idx;
-                console.log("choice sel = " + idx);
-                $('#choiceResult').html(`sel ${choiceOpenId} / remove ${choiceRemoveId}`);
-            }
 
-            function choiceRemove(idx) {
-                choiceRemoveId = idx;
-                console.log("choice remove = " + idx);
-                $('#choiceResult').html(`sel ${choiceOpenId} / remove ${choiceRemoveId}`);
-            }
+        <div style="width:500px; height:300px; position:absolute; top:750px; left:1370px;border-radius: 10px; color:white;"
+            id="betting_box">
+            <div style="width:200px; height:100px; background-color: #a33b0a; color:white; border-radius: 20px;
+                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;"
+                onclick="betting('double')" id="btn6">따당</div>
+            <div style="width:200px; height:100px; background-color: #96023f; color:white; border-radius: 20px;
+                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;"
+                onclick="betting('bing')" id="btn5">삥</div>
+            <div style="width:200px; height:100px; background-color: #880000; color:white; border-radius: 20px;
+                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;"
+                onclick="betting('quater')" id="btn3">쿼터</div>
+            <div style="width:200px; height:100px; background-color: #ffffff; color:black; border-radius: 20px;
+                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;"
+                onclick="betting('call')" id="btn1">콜</div>
+            <div style="width:200px; height:100px; background-color: #000000; color:white; border-radius: 20px;
+                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;"
+                onclick="betting('half')" id="btn2">하프</div>
+            <div style="width:200px; height:100px; background-color: #4d3e00; color:white; border-radius: 20px;
+                font-size: 50px;line-height: 100px; text-align: center; display: inline-block;"
+                onclick="betting('die')" id="btn4">다이</div>
 
-            function getLevelText(level) {
-                if(level == 12) {
-                    return "탑";
-                } else if(level == 11) {
-                    return "원페어";
-                }
-                else if(level == 10) {
-                    return "투페어";
-                }
-                else if(level == 9) {
-                    return "트리플";
-                }
-                else if(level == 8) {
-                    return "스트레이트";
-                }
-                else if(level == 7) {
-                    return "백스트레이트";
-                }
-                else if(level == 6) {
-                    return "마운틴";
-                }
-                else if(level == 5) {
-                    return "플러쉬";
-                }
-                else if(level == 4) {
-                    return "풀하우스";
-                }
-                else if(level == 3) {
-                    return "포카드";
-                }
-                else if(level == 2) {
-                    return "스트레이트 플러쉬";
-                }
-                else if(level == 1) {
-                    return "로열 스트레이트 플러쉬";
-                }
+        </div>
+    </div>
 
-            }
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        //game info
+        let userList;
+        let myId;
+        let choiceRemoveId = -1;
+        let choiceOpenId = -1;
+        let choiceCards;
+        let myMoney = 100000000;
+        let currentId = '';
+        let oname = "";
+        let rname = "";
 
-            function getShape(shape) {
-                if(shape == "S") {
-                    return "♠";
-                } else if(shape == "D") {
-                    return "◆"
-                } else if(shape == "H") {
-                    return "♥"
-                } else if(shape == "C") {
-                    return "♣"
-                }
-            }
 
-            function getNumber(num) {
-                if(num == 1) {
-                    return "A";
-                } else if(num== "11") {
-                    return "J";
-                } else if(num == "12") {
-                    return "Q";
-                } else if(num == "13") {
-                    return "K";
-                } else {
-                    return num;
-                }
-            }
-
-            function getCardName(card) {
-                let s = "";
-                let n = "";
-                if(card.shape == "S") {
-                    s = "♠";
-                } else if(card.shape == "D") {
-                    s = "◆"
-                } else if(card.shape == "H") {
-                    s = "♥"
-                } else if(card.shape == "C") {
-                    s = "♣"
-                }
-                if(card.number == 1) {
-                    n = "A";
-                } else if(card.number == "11") {
-                    n = "J";
-                } else if(card.number == "12") {
-                    n = "Q";
-                } else if(card.number == "13") {
-                    n = "K";
-                } else {
-                    n = String(card.number);
-                }
-                if(card.isShow) {
-                    return s+n;
-                }
-                return `[${s+n}]`;
-            }
-
-            function displayMyCard(cards) {
-                let cnt = 0;
-                if(cards.length <= 4) {
-                    for(var c of cards) {
-                        flyMyCard(cnt, c.shape, c.number, c.isShow);
-                        ++cnt;
-                    }
-                } else {
-                    let lastIdx = cards.length - 1;
-                    let c = cards[lastIdx];
-                    flyMyCard(lastIdx, c.shape, c.number, c.isShow);
-                }
-            }
-
-            function displayUserCard(cards) {
-                
-                var idx = 0;
-                for(var u of userList) {
-                    if(u === myId) {
-                        continue;
-                    }
-                    idx += 1;
-                    if(cards[u].length <= 2) {
-                        let cnt = 2;
-                        flyUserCard(idx, 0, '', 0, false);
-                        flyUserCard(idx, 1, '', 0, false);
-                        for(var c of cards[u]) {
-                            flyUserCard(idx, cnt, c.shape, c.number, c.isShow);
-                            cnt+=1;
-                        }
-                    } else {
-                        let lastIdx = cards[u].length - 1;
-                        let c = cards[u][lastIdx];
-                        flyUserCard(idx, lastIdx + 2, c.shape, c.number, c.isShow);
-                    }
-                }
-            }
-
-            function updateUserInfo() {
-
-                for(var i=1;i<=4;i++) {
-                    $(`#user${i}-text`).html("");
-                }
-
-                let cnt = 0;
-                for(var u of userList) {
-                    if(u == myId) {
-                        continue;
-                    }
-                    ++cnt;
-                    $(`#user${cnt}-text`).html(u + "님");
-                    
-                }
-            }
-
-            
-
-        </script>
-        <script>
-            var socket = io();
-            var joinRoomId = null;
-
-            socket.on('welcome', ({id}) => {
-                myId = id;
-                $('#my_id').html(id);
-                $('#myid-text').html(myId + "님");
-            });
-
-            socket.on("room_join", ({result, error}) => {
-                console.log("room join is " + result);
-                if(error) {
-                    joinRoomId = null;
-                    alert("room join is fail / " + error);
-                    return;
-                } else {
-                    alert("room join is " + result);
-                }
-            });
-
-            socket.on("room_leave", ({result}) => {
-                if(result === "success") {
-                    joinRoomId = null;
-                }
-                alert("room leave is " + result);
-            });
-
-            socket.on('user_info', ({users, result}) => {
-                let isJoin = false;
-                if(users.length > 0) {
-                    $('#dark').css('display', 'block');
-                    if(users[0] === myId) {
-                        $("#game_start_btn").css('display', 'inline-block');
-                    }
-                }
-                for(var u of users) {
-                    if(u === myId) {
-                        isJoin = true;
-                        break;
-                    }
-                }
-                if(isJoin) {
-                    userList = users;
-                    $("#users").html(JSON.stringify(users));
-                    console.log(JSON.stringify(users));
-                } else {
-                    userList = [];
-                    $("#users").html(JSON.stringify(userList));
-                }
-                updateUserInfo();
-            });
-
-            //choice
-            socket.on("choice", ({cards}) => {
-                //init();
+        function choiceSelect(idx) {
+            if (choiceOpenId == -1 || choiceRemoveId != -1) {
+                choiceOpenId = idx - 1;
+                choiceRemoveId = -1;
+                oname = getCardName(choiceCards[choiceOpenId]);
                 rname = "";
-                oname = "";
-                
-                initText();
-                $('#gameover').css('display', 'none');
-                $('#game_start_btn').css('display', 'none');
-                $('#pot-box').css('display', 'block');
+            } else if (choiceOpenId != -1 && choiceRemoveId == -1) {
+                choiceRemoveId = idx - 1;
+                rname = getCardName(choiceCards[choiceRemoveId]);
+            }
+            let info = `오픈카드 : ${oname} / 버릴카드 : ${rname}`;
+            $('#c-info').html(info);
+        }
+
+        function choiceSel(idx) {
+            choiceOpenId = idx;
+            console.log("choice sel = " + idx);
+            $('#choiceResult').html(`sel ${choiceOpenId} / remove ${choiceRemoveId}`);
+        }
+
+        function choiceRemove(idx) {
+            choiceRemoveId = idx;
+            console.log("choice remove = " + idx);
+            $('#choiceResult').html(`sel ${choiceOpenId} / remove ${choiceRemoveId}`);
+        }
+
+        function getLevelText(level) {
+            if (level == 12) {
+                return "탑";
+            } else if (level == 11) {
+                return "원페어";
+            }
+            else if (level == 10) {
+                return "투페어";
+            }
+            else if (level == 9) {
+                return "트리플";
+            }
+            else if (level == 8) {
+                return "스트레이트";
+            }
+            else if (level == 7) {
+                return "백스트레이트";
+            }
+            else if (level == 6) {
+                return "마운틴";
+            }
+            else if (level == 5) {
+                return "플러쉬";
+            }
+            else if (level == 4) {
+                return "풀하우스";
+            }
+            else if (level == 3) {
+                return "포카드";
+            }
+            else if (level == 2) {
+                return "스트레이트 플러쉬";
+            }
+            else if (level == 1) {
+                return "로열 스트레이트 플러쉬";
+            }
+
+        }
+
+        function getShape(shape) {
+            if (shape == "S") {
+                return "♠";
+            } else if (shape == "D") {
+                return "◆"
+            } else if (shape == "H") {
+                return "♥"
+            } else if (shape == "C") {
+                return "♣"
+            }
+        }
+
+        function getNumber(num) {
+            if (num == 1) {
+                return "A";
+            } else if (num == "11") {
+                return "J";
+            } else if (num == "12") {
+                return "Q";
+            } else if (num == "13") {
+                return "K";
+            } else {
+                return num;
+            }
+        }
+
+        function getCardName(card) {
+            let s = "";
+            let n = "";
+            if (card.shape == "S") {
+                s = "♠";
+            } else if (card.shape == "D") {
+                s = "◆"
+            } else if (card.shape == "H") {
+                s = "♥"
+            } else if (card.shape == "C") {
+                s = "♣"
+            }
+            if (card.number == 1) {
+                n = "A";
+            } else if (card.number == "11") {
+                n = "J";
+            } else if (card.number == "12") {
+                n = "Q";
+            } else if (card.number == "13") {
+                n = "K";
+            } else {
+                n = String(card.number);
+            }
+            if (card.isShow) {
+                return s + n;
+            }
+            return `[${s + n}]`;
+        }
+
+        function displayMyCard(cards) {
+            let cnt = 0;
+            if (cards.length <= 4) {
+                for (var c of cards) {
+                    flyMyCard(cnt, c.shape, c.number, c.isShow);
+                    ++cnt;
+                }
+            } else {
+                let lastIdx = cards.length - 1;
+                let c = cards[lastIdx];
+                flyMyCard(lastIdx, c.shape, c.number, c.isShow);
+            }
+        }
+
+        function displayUserCard(cards) {
+
+            var idx = 0;
+            for (var u of userList) {
+                if (u === myId) {
+                    continue;
+                }
+                idx += 1;
+                if (cards[u].length <= 2) {
+                    let cnt = 2;
+                    flyUserCard(idx, 0, '', 0, false);
+                    flyUserCard(idx, 1, '', 0, false);
+                    for (var c of cards[u]) {
+                        flyUserCard(idx, cnt, c.shape, c.number, c.isShow);
+                        cnt += 1;
+                    }
+                } else {
+                    let lastIdx = cards[u].length - 1;
+                    let c = cards[u][lastIdx];
+                    flyUserCard(idx, lastIdx + 2, c.shape, c.number, c.isShow);
+                }
+            }
+        }
+
+        function updateUserInfo() {
+
+            for (var i = 1; i <= 4; i++) {
+                $(`#user${i}-text`).html("");
+            }
+
+            let cnt = 0;
+            for (var u of userList) {
+                if (u == myId) {
+                    continue;
+                }
+                ++cnt;
+                $(`#user${cnt}-text`).html(u + "님");
+
+            }
+        }
+
+
+
+    </script>
+    <script>
+        var socket = io();
+        var joinRoomId = null;
+
+        socket.on('welcome', ({ id }) => {
+            myId = id;
+            $('#my_id').html(id);
+            $('#myid-text').html(playerName + "님");
+        });
+
+        socket.on("room_join", ({ result, error }) => {
+            console.log("방 입장 이벤트 발생");
+            if (result === "success") {
+                console.log("나가기 버튼 표시");
+                document.getElementById("room_buttons").style.display = "block"; // 나가기 버튼 표시
+            } else if (error) {
+                console.log("방 입장 실패: " + error);
+            }
+        });
+
+        // 방 퇴장 시 나가기 버튼 숨김
+        socket.on("room_leave", ({ result }) => {
+            if (result === "success") {
+                console.log("방에서 나감");
+                joinRoomId = null;
+                document.getElementById("room_buttons").style.display = "none"; // 나가기 버튼 숨김
+                alert("방에서 나왔습니다.");
+                window.location.reload();
+            }
+        });
+
+        socket.on('user_info', ({ users, hostId, result }) => {
+            let isJoin = false;
+            if (users.length > 0) {
                 $('#dark').css('display', 'block');
-                $('#choice-box').css('display', 'block');
 
-                console.log("choice cards ");
-                console.log(cards);
-                choiceCards = cards;
-                
-                for(var i=0;i<cards.length;i++) {
-                    let idx = i + 1;
-                    $(`#c-n-${idx}`).html(getNumber(cards[i].number));
-                    $(`#c-s-${idx}`).html(getShape(cards[i].shape));
-                    if(cards[i].shape == 'H' || cards[i].shape == 'D') {
-                        $(`#c-n-${idx}`).css('color', 'red');
-                        $(`#c-s-${idx}`).css('color', 'red');
-                    } else {
-                        $(`#c-n-${idx}`).css('color', 'black');
-                        $(`#c-s-${idx}`).css('color', 'black');
-                    }
-                    
-                }
-
-            });
-
-            //give
-            socket.on('give_my_card_info', ({cards, level}) => {
-                $('#choice-box-waiting').css('display', 'none');
-                $('#dark').css('display', 'none');
-                console.log("my level : " + level);
-
-                $('#mylevel-box').html("");
-
-                let dek = ["", "로열 스트레이트 플러쉬", "스트레이트 플러쉬", "포카드", "풀하우스", "플러쉬",
-                 "마운틴", "백스트레이트", "스트레이트", "트리플", "투페어", "원페어", "탑"];
-                 let start = 0;
-                 let end = 0;
-                if(level > 9) {
-                    end = 12;
-                    start = 7; 
-                } else if(level < 4) {
-                    start = 1;
-                    end = 6;
+                // 방장 확인 후 게임 시작 버튼 표시 (이미지 방식)
+                if (users[0].id === myId) {
+                    $("#game_start_btn").css('display', 'inline-block');
+                    console.log("방장입니다. 게임 시작 버튼 표시됨.");
                 } else {
-                    end = level + 3;
-                    start = level - 2;
+                    $("#game_start_btn").css('display', 'none');
                 }
+            } else {
+                $("#game_start_btn").css('display', 'none'); // 아무도 없으면 버튼 숨김
+            }
 
-                let levelText = "";
-                for(var i=start; i<=end;i++) {
-                    if(level == i) {
-                        levelText = `<div style="display:inline-block; color:rgb(96, 209, 96);font-weight: bold;">${dek[i]}</div><br>`;
-                    } else {
-                        levelText = `<div style="display:inline-block; color:white;">${dek[i]}</div><br>`;
-                    }
-                    $('#mylevel-box').append(levelText);
+            for (var user of users) {
+                if (user.id === myId) {
+                    isJoin = true;
+                    break;
                 }
+            }
 
-                console.log('give_my_card_info');
-                console.log(cards);
-                displayMyCard(cards);
+            if (isJoin) {
+                userList = users;
 
-            });
+                // `[object Object]님` 문제 해결 (user.name을 사용)
+                let userListHtml = users.map(user => user.name ? `${user.name}님` : '알 수 없음').join('<br>');
+                $("#users").html(userListHtml);
 
-            socket.on('give_user_card_info', ({cards}) => {
+                console.log("현재 방 참가자 목록: ", users);
+            } else {
+                userList = [];
+                $("#users").html("");
+            }
 
-                console.log('give_user_card_info');
-                console.log(cards);
-                displayUserCard(cards);
+            updateUserInfo(); // 기존 기능 유지
+        });
 
-            });
+        //choice
+        socket.on("choice", ({ cards }) => {
+            //init();
+            rname = "";
+            oname = "";
 
+            initText();
+            $('#gameover').css('display', 'none');
+            $('#game_start_btn').css('display', 'none');
+            $('#pot-box').css('display', 'block');
+            $('#dark').css('display', 'block');
+            $('#choice-box').css('display', 'block');
 
-            
-            //boss
-            socket.on('boss', ({bossId}) => {
+            console.log("choice cards ");
+            console.log(cards);
+            choiceCards = cards;
 
-                $(`#my-boss`).css('display','none');   
-                $(`#user1-boss`).css('display','none');   
-                $(`#user2-boss`).css('display','none');   
-                $(`#user3-boss`).css('display','none');   
-                $(`#user4-boss`).css('display','none');   
-
-                console.log("boss id is " + bossId);
-                currentId = bossId;
-                if(bossId == myId) {
-                    $(`#my-boss`).css('display','block');   
+            for (var i = 0; i < cards.length; i++) {
+                let idx = i + 1;
+                $(`#c-n-${idx}`).html(getNumber(cards[i].number));
+                $(`#c-s-${idx}`).html(getShape(cards[i].shape));
+                if (cards[i].shape == 'H' || cards[i].shape == 'D') {
+                    $(`#c-n-${idx}`).css('color', 'red');
+                    $(`#c-s-${idx}`).css('color', 'red');
                 } else {
-                    let cnt = 1;
-                    for(var u of userList) {
-                        if(u == myId) {
-                            continue;
-                        }
-                        if(u == bossId) {
-                            $(`#user${cnt}-boss`).css('display','block');   
-                            break;
-                        }
-                        cnt+=1;
-                    }
+                    $(`#c-n-${idx}`).css('color', 'black');
+                    $(`#c-s-${idx}`).css('color', 'black');
                 }
 
-            });
+            }
 
-            socket.on('bettingInfo', ({currentUserId, userId, userList, pot, maxCall, callList, betPrice, turn, hasBetCnt, type}) => {
+        });
 
-                    console.log('=========');
-                    console.log(`currentUserId ${currentUserId}  userId ${userId}`);
-                    console.log(`pot ${pot}  maxCall ${maxCall}  betPrice ${betPrice}`);
-                    console.log('=========');
-                    console.log(callList);
-                    let myCall = parseInt(maxCall) - callList[myId]; 
-                    console.log('mycall = ' + myCall);
-                    $('#mycall').html(myCall);
-                    $('#pot').html(pot);
-                    //$('#betting_box').css('display', 'none');
-                    $('#turn').html(turn);
-                    if(currentUserId != null) {
-                        //$('#currentUserId').html(currentUserId);
-                        currentId = currentUserId;
-                        highlightCurrentUser(currentUserId);
-                        if(currentUserId == myId) {
-                            $('#betting_box').css('opacity', '1');
-                            if(hasBetCnt) {
-                                for(var i=1;i<=6;i++) {
-                                    $('#btn' + i).css('display', 'inline-block');
-                                }
-                            } else {
-                                for(var i=1;i<=6;i++) {
-                                    $('#btn' + i).css('display', 'none');
-                                }
-                                $('#btn1').css('display', 'inline-block');
-                                $('#btn4').css('display', 'inline-block');
-                            }
-                        } else {
-                            $('#betting_box').css('opacity', '0.5');
-                        }
-                        return;
-                    }
+        //give
+        socket.on('give_my_card_info', ({ cards, level }) => {
+            $('#choice-box-waiting').css('display', 'none');
+            $('#dark').css('display', 'none');
+            console.log("my level : " + level);
 
-                    $('#bet_user_id').html(userId);
-                    $('#bet_price').html(betPrice);
-                    if(userId == myId) {
-                        $('#myid-bet').html(`${type} ${betPrice}`);
-                        $('#myid-bet').fadeIn("slow").fadeOut("slow");
-                    } else {
-                        let cnt = 1;                    
-                        for(var u of userList) {
-                            if(u == myId) {
-                                continue;
-                            }
-                            if(userId == u) {
-                                console.log(cnt);
-                                $(`#user${cnt}-bet`).html(`${type} ${betPrice}`);
-                                $(`#user${cnt}-bet`).fadeIn("slow").fadeOut("slow");
-                                break;
-                            }
-                            cnt += 1;
-                        }
-                    }
-            });
+            $('#mylevel-box').html("");
 
-            socket.on('betting', ({userId, type}) => {
+            let dek = ["", "로열 스트레이트 플러쉬", "스트레이트 플러쉬", "포카드", "풀하우스", "플러쉬",
+                "마운틴", "백스트레이트", "스트레이트", "트리플", "투페어", "원페어", "탑"];
+            let start = 0;
+            let end = 0;
+            if (level > 9) {
+                end = 12;
+                start = 7;
+            } else if (level < 4) {
+                start = 1;
+                end = 6;
+            } else {
+                end = level + 3;
+                start = level - 2;
+            }
 
-                console.log(`userId ${userId}   type ${type}`);
-
-            });
-
-
-            socket.on('gameover', ({userList, userCard, winner}) => {
-                $('#winner-info').html(`${winner}님이 이겼습니다.`);
-                if(winner == myId) {
-                    $('#winner-result').css('color', 'white');
-                    $('#winner-result').html("🎉WIN🎈👏");
+            let levelText = "";
+            for (var i = start; i <= end; i++) {
+                if (level == i) {
+                    levelText = `<div style="display:inline-block; color:rgb(96, 209, 96);font-weight: bold;">${dek[i]}</div><br>`;
                 } else {
-                    $('#winner-result').css('color', 'white');
-                    $('#winner-result').html("🥶LOSE😭");
+                    levelText = `<div style="display:inline-block; color:white;">${dek[i]}</div><br>`;
                 }
-                console.log('winner is ' + winner);
-                console.log(userCard);
-                $('#winner').html(winner);
+                $('#mylevel-box').append(levelText);
+            }
 
+            console.log('give_my_card_info');
+            console.log(cards);
+            displayMyCard(cards);
+
+        });
+
+        socket.on('give_user_card_info', ({ cards }) => {
+
+            console.log('give_user_card_info');
+            console.log(cards);
+            displayUserCard(cards);
+
+        });
+
+
+
+        //boss
+        socket.on('boss', ({ bossId }) => {
+
+            $(`#my-boss`).css('display', 'none');
+            $(`#user1-boss`).css('display', 'none');
+            $(`#user2-boss`).css('display', 'none');
+            $(`#user3-boss`).css('display', 'none');
+            $(`#user4-boss`).css('display', 'none');
+
+            console.log("boss id is " + bossId);
+            currentId = bossId;
+            if (bossId == myId) {
+                $(`#my-boss`).css('display', 'block');
+            } else {
                 let cnt = 1;
-                for(var u of userList) {
-                    if(u == myId) {
+                for (var u of userList) {
+                    if (u == myId) {
                         continue;
                     }
-                    var cards = userCard[u];
-                    let idx = 0;
-                    for(var c of cards) {
-                        updateUserCard(cnt, idx, c.shape, c.number);
-                        idx += 1;
+                    if (u == bossId) {
+                        $(`#user${cnt}-boss`).css('display', 'block');
+                        break;
                     }
                     cnt += 1;
                 }
-                $('#dark').css('display', 'block');
-                $('#gameover').css('display', 'block');
-            });
+            }
 
-        </script>
-        <script>
-            $("#room_create_btn").click(()=>{
-                if(joinRoomId != null) {
-                    alert('ERROR : already join room is ' + joinRoomId);
-                    return;
-                }
-                const roomId = $('#room_id').val();
-                console.log("ENTERED ROOM ID : " + roomId);
-                joinRoomId = roomId;
-                socket.emit("room_join",{
-                    id:roomId
-                });
-            });
+        });
 
-            $('#room_leave_btn').click(()=>{
-                if(joinRoomId == null) {
-                    return;
-                }
+        socket.on('bettingInfo', ({ currentUserId, userId, userList, pot, maxCall, callList, betPrice, turn, hasBetCnt, type }) => {
 
-                socket.emit("room_leave", {
-                    id:joinRoomId
-                });
-
-                $('#room_id').val("");
-
-            });
-
-            $("#game_start_btn").click(()=> {
-                //init();
-                if(myId != null && userList != null && userList.length > 1) {
-                    socket.emit("game_start");
+            console.log('=========');
+            console.log(`currentUserId ${currentUserId}  userId ${userId}`);
+            console.log(`pot ${pot}  maxCall ${maxCall}  betPrice ${betPrice}`);
+            console.log('=========');
+            console.log(callList);
+            let myCall = parseInt(maxCall) - callList[myId];
+            console.log('mycall = ' + myCall);
+            $('#mycall').html(myCall);
+            $('#pot').html(pot);
+            //$('#betting_box').css('display', 'none');
+            $('#turn').html(turn);
+            if (currentUserId != null) {
+                //$('#currentUserId').html(currentUserId);
+                currentId = currentUserId;
+                highlightCurrentUser(currentUserId);
+                if (currentUserId == myId) {
+                    $('#betting_box').css('opacity', '1');
+                    if (hasBetCnt) {
+                        for (var i = 1; i <= 6; i++) {
+                            $('#btn' + i).css('display', 'inline-block');
+                        }
+                    } else {
+                        for (var i = 1; i <= 6; i++) {
+                            $('#btn' + i).css('display', 'none');
+                        }
+                        $('#btn1').css('display', 'inline-block');
+                        $('#btn4').css('display', 'inline-block');
+                    }
                 } else {
-                    alert("can't start yet.");
+                    $('#betting_box').css('opacity', '0.5');
                 }
+                return;
+            }
 
-            });
-
-            $("#init").click(() => {
-                //init();   
-            });
-
-            function choiceSend() {
-
-                $("#choice-box").css('display', 'none');
-                $("#choice-box-waiting").css('display', 'block');
-
-                let cards = [];
-                for(var i=0;i<choiceCards.length;i++) {
-                    if(i == choiceRemoveId) {
+            $('#bet_user_id').html(userId);
+            $('#bet_price').html(betPrice);
+            if (userId == myId) {
+                $('#myid-bet').html(`${type} ${betPrice}`);
+                $('#myid-bet').fadeIn("slow").fadeOut("slow");
+            } else {
+                let cnt = 1;
+                for (var u of userList) {
+                    if (u == myId) {
                         continue;
                     }
-                    if(i == choiceOpenId) {
-                        choiceCards[i].isShow = true;
+                    if (userId == u) {
+                        console.log(cnt);
+                        $(`#user${cnt}-bet`).html(`${type} ${betPrice}`);
+                        $(`#user${cnt}-bet`).fadeIn("slow").fadeOut("slow");
+                        break;
                     }
-                    cards.push(choiceCards[i]);
+                    cnt += 1;
                 }
-                console.log(cards);
-                socket.emit("choice", {
-                    cards : cards
-                });
-                
             }
+        });
 
-            function betting(type) {
-                if(currentId != myId) {
-                    console.log('not my turn.');
-                    return;
+        socket.on('betting', ({ userId, type }) => {
+
+            console.log(`userId ${userId}   type ${type}`);
+
+        });
+
+
+        socket.on('gameover', ({ userList, userCard, winner }) => {
+            $('#winner-info').html(`${winner}님이 이겼습니다.`);
+            if (winner == myId) {
+                $('#winner-result').css('color', 'white');
+                $('#winner-result').html("🎉WIN🎈👏");
+            } else {
+                $('#winner-result').css('color', 'white');
+                $('#winner-result').html("🥶LOSE😭");
+            }
+            console.log('winner is ' + winner);
+            console.log(userCard);
+            $('#winner').html(winner);
+
+            let cnt = 1;
+            for (var u of userList) {
+                if (u == myId) {
+                    continue;
                 }
-                socket.emit('betting', {
-                    userId:myId,
-                    type:type
-                });
-            }
-
-        </script>
-
-        <script>
-
-            function init() {
-                updateResolution();
-                console.log('poker game init complete');
-            }
-
-            function updateResolution() {
-                var rw = window.innerWidth / 1921;
-                var rh = window.innerHeight / 1081;
-                var r = rw;
-                if(rh < rw) {
-                    r = rh;
+                var cards = userCard[u];
+                let idx = 0;
+                for (var c of cards) {
+                    updateUserCard(cnt, idx, c.shape, c.number);
+                    idx += 1;
                 }
-                console.log(rw + ", " + rh);
-                var gw = (window.innerWidth - (1921 * r)) / 2;
-                var gh = (window.innerHeight - (1081 * r)) / 2;
-                $('body').css('margin-left', gw);
-                $('body').css('margin-top', gh);
-                $('#content').css('transform', `scale(${r.toFixed(4)},${r.toFixed(4)})`);
-                console.log('updateResolution');
+                cnt += 1;
+            }
+            $('#dark').css('display', 'block');
+            $('#gameover').css('display', 'block');
+        });
+
+    </script>
+    <script>
+        $("#room_create_btn").click(() => {
+            if (joinRoomId != null) {
+                alert('ERROR : already join room is ' + joinRoomId);
+                return;
+            }
+            const roomId = $('#room_id').val();
+            console.log("ENTERED ROOM ID : " + roomId);
+            joinRoomId = roomId;
+
+            // z-index를 낮춤 (ID나 클래스 이름 사용)
+            $("#z-call").css('display', 'none');  // 요소의 ID 사용
+
+            socket.emit("room_join", {
+                id: roomId
+            });
+        });
+
+        $('#room_leave_btn').click(() => {
+            if (joinRoomId == null) {
+                alert('입장 중인 방이 없습니다.');
+                return;
             }
 
-            window.onresize = () => init();
+            socket.emit("room_leave", {
+                id: joinRoomId
+            });
 
-        </script>
-        <script>
-            function give() {
-                $("#test").css('z-index', '9');
-                $("#test").animate({
-                    top:'20px',
-                    left:'30px'
-                })
+            joinRoomId = null;
+
+            // 화면 초기화
+            $("#z-call").css('display', 'block');  // 메인 화면 표시
+            $("#room_buttons").css('display', 'none'); // 나가기 버튼 숨김
+        });
+
+        // 방장이 게임 시작 버튼을 누르면 실행됨
+        $("#game_start_btn").click(() => {
+            if (myId != null && userList != null && userList.length > 1) {
+                socket.emit("game_start", { id: joinRoomId }); // 서버로 게임 시작 이벤트 전송
+            } else {
+                alert("게임을 시작할 수 없습니다. 최소 2명이 필요합니다.");
             }
+        });
 
-            function flyMyCard(num, shape, number, isShow) {
-                let id = `card-my-${num}`;
-                let startTop = '-90px';
-                let startLeft = '850.5px';
-                let endTop = '770px';
-                let endLeftValue = 640 + 70 * num;
-                let endLeft = endLeftValue + 'px';
-                let card = `<div id="${id}" style="width:140px; height:220px; background-color: gray; position: absolute;
+        // 서버에서 모든 플레이어에게 게임 시작 이벤트를 보내면 실행됨
+        socket.on("game_start", () => {
+            console.log("게임이 다시 시작되었습니다!");
+
+            // UI 리셋
+            $('#gameover').css('display', 'none');
+            $('#pot-box').css('display', 'block');
+            $('#dark').css('display', 'block');
+            $('#game_start_btn').css('display', 'none');
+
+            initText();
+        });
+
+
+        // 방장이 게임을 시작하면 모든 플레이어의 나가기 버튼을 비활성화
+        socket.on("disable_exit_button", () => {
+            console.log("나가기 버튼 비활성화됨");
+            document.getElementById("room_buttons").style.display = "none";
+            document.getElementById("room_leave_btn").style.display = "none";
+            document.getElementById("room_leave_btn_main").style.display = "none";
+        });
+
+
+        $("#init").click(() => {
+            //init();   
+        });
+
+        function choiceSend() {
+
+            $("#choice-box").css('display', 'none');
+            $("#choice-box-waiting").css('display', 'block');
+
+            let cards = [];
+            for (var i = 0; i < choiceCards.length; i++) {
+                if (i == choiceRemoveId) {
+                    continue;
+                }
+                if (i == choiceOpenId) {
+                    choiceCards[i].isShow = true;
+                }
+                cards.push(choiceCards[i]);
+            }
+            console.log(cards);
+            socket.emit("choice", {
+                cards: cards
+            });
+
+        }
+
+        function betting(type) {
+            if (currentId != myId) {
+                console.log('not my turn.');
+                return;
+            }
+            socket.emit('betting', {
+                userId: myId,
+                type: type
+            });
+        }
+
+    </script>
+
+    <script>
+
+        function init() {
+            updateResolution();
+            console.log('poker game init complete');
+        }
+
+        function updateResolution() {
+            var rw = window.innerWidth / 1921;
+            var rh = window.innerHeight / 1081;
+            var r = rw;
+            if (rh < rw) {
+                r = rh;
+            }
+            console.log(rw + ", " + rh);
+            var gw = (window.innerWidth - (1921 * r)) / 2;
+            var gh = (window.innerHeight - (1081 * r)) / 2;
+            $('body').css('margin-left', gw);
+            $('body').css('margin-top', gh);
+            $('#content').css('transform', `scale(${r.toFixed(4)},${r.toFixed(4)})`);
+            console.log('updateResolution');
+        }
+
+        window.onresize = () => init();
+
+    </script>
+    <script>
+        function give() {
+            $("#test").css('z-index', '9');
+            $("#test").animate({
+                top: '20px',
+                left: '30px'
+            })
+        }
+
+        function flyMyCard(num, shape, number, isShow) {
+            let id = `card-my-${num}`;
+            let startTop = '-90px';
+            let startLeft = '850.5px';
+            let endTop = '770px';
+            let endLeftValue = 640 + 70 * num;
+            let endLeft = endLeftValue + 'px';
+            let card = `<div id="${id}" style="width:140px; height:220px; background-color: gray; position: absolute;
             border-radius: 10px; top:${startTop}; left:${startLeft}; border:5px solid #dedede;">
               <div style="font-size:40px; font-weight: bold; position: absolute; left:10px;color: #bd2828;" id="card-my-number-${num}"></div>
               <div style="font-size:90px;left:25px;position:absolute;top:40px;color:#bd2828;" id="card-my-shape-${num}"></div>
             </div>`;
-                $('#mycard-area').append(card);
-                $('#' + id).animate({
-                    top:endTop,
-                    left:endLeft
-                });
-                $("#card-my-shape-" + num).html(getShape(shape));
-                $("#card-my-number-" + num).html(getNumber(number));
-                if(shape == 'H' || shape == 'D') {
-                    $("#card-my-shape-" + num).css('color', '#bd2828');
-                    $("#card-my-number-" + num).css('color', '#bd2828');
-                } else {
-                    $("#card-my-shape-" + num).css('color', 'black');
-                    $("#card-my-number-" + num).css('color', 'black');
-                }
-
-                if(isShow) {
-                    $('#' + id).css('background-color', 'white');
-                } else {
-                    $('#' + id).css('background-color', 'gray');
-                }
-                
+            $('#mycard-area').append(card);
+            $('#' + id).animate({
+                top: endTop,
+                left: endLeft
+            });
+            $("#card-my-shape-" + num).html(getShape(shape));
+            $("#card-my-number-" + num).html(getNumber(number));
+            if (shape == 'H' || shape == 'D') {
+                $("#card-my-shape-" + num).css('color', '#bd2828');
+                $("#card-my-number-" + num).css('color', '#bd2828');
+            } else {
+                $("#card-my-shape-" + num).css('color', 'black');
+                $("#card-my-number-" + num).css('color', 'black');
             }
 
-            function flyUserCard(userId, num, shape, number, isShow) {
-                //top:120px; left:70px;
-                let id = `card-user${userId}-${num}`;
-                let startTop = '-90px';
-                let startLeft = '850.5px';
-                let endTop = '120px';
-                if(userId == 2 || userId == 4) {
-                    endTop = '470px';
-                }
-                let endLeftValue = 70 + 70 * num;
-                //1291
-                if(userId == 3 || userId == 4) {
-                    endLeftValue = 1291 + 70 * num;
-                }
-                let endLeft = endLeftValue + 'px';
+            if (isShow) {
+                $('#' + id).css('background-color', 'white');
+            } else {
+                $('#' + id).css('background-color', 'gray');
+            }
 
-                let card = `<div id="${id}" style="width:120px; height:180px; background-color: #dedede; position: absolute; top:0px; left:0px;
+        }
+
+        function flyUserCard(userId, num, shape, number, isShow) {
+            //top:120px; left:70px;
+            let id = `card-user${userId}-${num}`;
+            let startTop = '-90px';
+            let startLeft = '850.5px';
+            let endTop = '120px';
+            if (userId == 2 || userId == 4) {
+                endTop = '470px';
+            }
+            let endLeftValue = 70 + 70 * num;
+            //1291
+            if (userId == 3 || userId == 4) {
+                endLeftValue = 1291 + 70 * num;
+            }
+            let endLeft = endLeftValue + 'px';
+
+            let card = `<div id="${id}" style="width:120px; height:180px; background-color: #dedede; position: absolute; top:0px; left:0px;
                     border-radius: 10px; top:${startTop}; left:${startLeft}; border:5px solid #232323;">
                     <div style="font-size:40px; font-weight: bold; position: absolute; left:10px;" id="card-user${userId}-number-${num}"></div>
                     <div style="font-size:70px;left:25px;position:absolute;top:40px;" id="card-user${userId}-shape-${num}"></div>
                 </div>`;
 
-                $(`#user${userId}-area`).append(card);
-                $('#' + id).animate({
-                    top:endTop,
-                    left:endLeft
-                });
-                if(num > 1 && num != 6) {
-                    $(`#card-user${userId}-shape-` + num).html(getShape(shape));
-                    $(`#card-user${userId}-number-` + num).html(getNumber(number));
-                    if(shape == 'H' || shape == 'D') {
-                        $(`#card-user${userId}-shape-` + num).css('color', '#bd2828');
-                        $(`#card-user${userId}-number-` + num).css('color', '#bd2828');
-                    } else {
-                        $(`#card-user${userId}-shape-` + num).css('color', 'black');
-                        $(`#card-user${userId}-number-` + num).css('color', 'black');
-                    }
-
-                    if(isShow) {
-                        $('#' + id).css('background-color', 'white');
-                    } else {
-                        $('#' + id).css('background-color', 'gray');
-                    }
-                } else {
-                    $('#' + id).css('background-color', 'gray');
-                }
-            }
-
-            function updateUserCard(userId, num, shape, number) {
-                console.log(`${userId} ${num}, ${shape}, ${number}`);
-                let id = `card-user${userId}-${num}`;
-                
+            $(`#user${userId}-area`).append(card);
+            $('#' + id).animate({
+                top: endTop,
+                left: endLeft
+            });
+            if (num > 1 && num != 6) {
                 $(`#card-user${userId}-shape-` + num).html(getShape(shape));
                 $(`#card-user${userId}-number-` + num).html(getNumber(number));
-                if(shape == 'H' || shape == 'D') {
+                if (shape == 'H' || shape == 'D') {
                     $(`#card-user${userId}-shape-` + num).css('color', '#bd2828');
                     $(`#card-user${userId}-number-` + num).css('color', '#bd2828');
                 } else {
                     $(`#card-user${userId}-shape-` + num).css('color', 'black');
                     $(`#card-user${userId}-number-` + num).css('color', 'black');
                 }
-                $('#' + id).css('background-color', 'white');
-                
-            }
 
-            function highlightCurrentUser(userId) {
-                $('#mycard-area').css('opacity', '0.5');
-                $(`#user1-area`).css('opacity', '0.5');
-                $(`#user2-area`).css('opacity', '0.5');
-                $(`#user3-area`).css('opacity', '0.5');
-                $(`#user4-area`).css('opacity', '0.5');
-                
-                $('#myid-text').css('opacity', '0.4');
-                $(`#user1-text`).css('opacity', '0.4');
-                $(`#user2-text`).css('opacity', '0.4');
-                $(`#user3-text`).css('opacity', '0.4');
-                $(`#user4-text`).css('opacity', '0.4');
-
-
-                if(userId == myId) {
-                    $('#mycard-area').css('opacity', '1');
-                    $('#myid-text').css('opacity', '1');
+                if (isShow) {
+                    $('#' + id).css('background-color', 'white');
                 } else {
-                    let cnt = 1;
-                    for(var u of userList) {
-                        if(u == myId) {
-                            continue;
-                        }
-                        if(u == userId) {
-                            $(`#user${cnt}-area`).css('opacity', '1');
-                            $(`#user${cnt}-text`).css('opacity', '1');
-                            break;
-                        }
-                        cnt += 1;
+                    $('#' + id).css('background-color', 'gray');
+                }
+            } else {
+                $('#' + id).css('background-color', 'gray');
+            }
+        }
+
+        function updateUserCard(userId, num, shape, number) {
+            console.log(`${userId} ${num}, ${shape}, ${number}`);
+            let id = `card-user${userId}-${num}`;
+
+            $(`#card-user${userId}-shape-` + num).html(getShape(shape));
+            $(`#card-user${userId}-number-` + num).html(getNumber(number));
+            if (shape == 'H' || shape == 'D') {
+                $(`#card-user${userId}-shape-` + num).css('color', '#bd2828');
+                $(`#card-user${userId}-number-` + num).css('color', '#bd2828');
+            } else {
+                $(`#card-user${userId}-shape-` + num).css('color', 'black');
+                $(`#card-user${userId}-number-` + num).css('color', 'black');
+            }
+            $('#' + id).css('background-color', 'white');
+
+        }
+
+        function highlightCurrentUser(userId) {
+            $('#mycard-area').css('opacity', '0.5');
+            $(`#user1-area`).css('opacity', '0.5');
+            $(`#user2-area`).css('opacity', '0.5');
+            $(`#user3-area`).css('opacity', '0.5');
+            $(`#user4-area`).css('opacity', '0.5');
+
+            $('#myid-text').css('opacity', '0.4');
+            $(`#user1-text`).css('opacity', '0.4');
+            $(`#user2-text`).css('opacity', '0.4');
+            $(`#user3-text`).css('opacity', '0.4');
+            $(`#user4-text`).css('opacity', '0.4');
+
+
+            if (userId == myId) {
+                $('#mycard-area').css('opacity', '1');
+                $('#myid-text').css('opacity', '1');
+            } else {
+                let cnt = 1;
+                for (var u of userList) {
+                    if (u == myId) {
+                        continue;
                     }
+                    if (u == userId) {
+                        $(`#user${cnt}-area`).css('opacity', '1');
+                        $(`#user${cnt}-text`).css('opacity', '1');
+                        break;
+                    }
+                    cnt += 1;
                 }
-                
-                
             }
 
-            function initText() {
-                $('#mycard-area').html("");
-                $(`#user1-area`).html("");
-                $(`#user2-area`).html("");
-                $(`#user3-area`).html("");
-                $(`#user4-area`).html("");
-                $('#mycall').html("0");
-                $('#pot').html("0");
 
-                $('#mycard-area').css('opacity', '0.5');
-                $(`#user1-area`).css('opacity', '0.5');
-                $(`#user2-area`).css('opacity', '0.5');
-                $(`#user3-area`).css('opacity', '0.5');
-                $(`#user4-area`).css('opacity', '0.5');
-                
-                $('#myid-text').css('opacity', '0.4');
-                $(`#user1-text`).css('opacity', '0.4');
-                $(`#user2-text`).css('opacity', '0.4');
-                $(`#user3-text`).css('opacity', '0.4');
-                $(`#user4-text`).css('opacity', '0.4');
+        }
+
+        function initText() {
+            $('#mycard-area').html("");
+            $(`#user1-area`).html("");
+            $(`#user2-area`).html("");
+            $(`#user3-area`).html("");
+            $(`#user4-area`).html("");
+            $('#mycall').html("0");
+            $('#pot').html("0");
+
+            $('#mycard-area').css('opacity', '0.5');
+            $(`#user1-area`).css('opacity', '0.5');
+            $(`#user2-area`).css('opacity', '0.5');
+            $(`#user3-area`).css('opacity', '0.5');
+            $(`#user4-area`).css('opacity', '0.5');
+
+            $('#myid-text').css('opacity', '0.4');
+            $(`#user1-text`).css('opacity', '0.4');
+            $(`#user2-text`).css('opacity', '0.4');
+            $(`#user3-text`).css('opacity', '0.4');
+            $(`#user4-text`).css('opacity', '0.4');
+        }
+
+        function restart() {
+            console.log("다시하기 버튼 클릭됨, 서버로 game_restart 이벤트 전송");
+
+            $('#gameover').css('display', 'none');  // 게임 종료 화면 숨김
+            $('#pot-box').css('display', 'none');   // 팟 금액 표시 숨김
+            initText();  // 기존 카드 및 UI 초기화
+
+            // 방장이면 게임 시작 버튼 다시 보이게 함
+            if (userList && userList.length > 0 && userList[0].id === myId) {
+                $("#game_start_btn").css('display', 'inline-block');
             }
 
-            function restart() {
-                $('#gameover').css('display','none');
-                $('#pot-box').css('display','none');
-               initText();
+            if (!joinRoomId) {
+                console.error("게임을 다시 시작할 수 없습니다. joinRoomId가 설정되지 않음");
+                alert("ERROR: 다시 시작할 방 정보가 없습니다.");
+                return;
+            }
 
-                if(userList[0] === myId) {
-                    $("#game_start_btn").css('display', 'inline-block');
+            // 서버에 "게임 다시 시작" 요청 보내기
+            socket.emit("game_restart", { id: joinRoomId });
+
+            console.log("게임 다시 시작 요청 전송 완료: 방 ID =", joinRoomId);
+        }
+
+
+    </script>
+    <!-- 서버에서 데이터를 삽입할 자리 -->
+    <script id="server-data"></script>
+
+    <script>
+        // 서버에서 삽입된 데이터를 바로 사용
+        // document.getElementById('player-info').textContent = playerName;
+        // document.getElementById('player-bet').textContent =  playerBet       
+    </script>
+    <script>
+        // 클릭 시 접속 버튼의 기능을 수행하도록 변경
+        const updateRoomList = (rooms) => {
+            const roomListDiv = document.getElementById('room_list');
+            roomListDiv.innerHTML = '';
+
+            rooms.forEach(room => {
+                const roomDiv = document.createElement('div');
+                roomDiv.style.padding = '8px 0';
+                roomDiv.style.fontSize = '18px';
+                roomDiv.style.cursor = 'pointer';
+
+                roomDiv.innerHTML = `방 이름: <b>${room.roomId}</b> (인원: ${room.userCount}/5)`;
+
+                if (room.userCount < 5) {
+                    roomDiv.onclick = () => {
+                        if (joinRoomId != null) {
+                            alert('이미 입장한 방이 있습니다: ' + joinRoomId);
+                            return;
+                        }
+                        const roomId = room.roomId;
+                        console.log("ENTERED ROOM ID : " + roomId);
+                        joinRoomId = roomId;
+
+                        // 기존 접속 버튼과 동일한 동작 수행
+                        $("#z-call").css('display', 'none');
+                        socket.emit("room_join", { id: roomId });
+                    };
+                    roomDiv.onmouseover = () => roomDiv.style.color = '#00ff00';
+                    roomDiv.onmouseout = () => roomDiv.style.color = 'white';
                 } else {
-                    
+                    roomDiv.style.color = '#ff0000';
+                    roomDiv.style.cursor = 'default';
+                    roomDiv.innerHTML += ' (입장 불가)';
                 }
+
+                roomListDiv.appendChild(roomDiv);
+            });
+        };
+
+        // 서버로부터 룸 목록 수신
+        socket.on('room_list', ({ rooms }) => {
+            updateRoomList(rooms);
+        });
+
+        // 룸 목록 요청 (페이지 로드 시 및 주기적으로 업데이트)
+        socket.emit('get_room_list');
+        setInterval(() => {
+            socket.emit('get_room_list');
+        }, 5000); // 5초마다 업데이트
+
+        document.getElementById("room_leave_btn_main").addEventListener("click", function () {
+            if (joinRoomId == null) {
+                alert('입장 중인 방이 없습니다.');
+                return;
             }
 
-        </script>
-    </body>
+            console.log("방 나가기 요청: " + joinRoomId);
+
+            socket.emit("room_leave", { id: joinRoomId });
+
+            joinRoomId = null;
+
+            // UI 초기화
+            document.getElementById("z-call").style.display = "block";  // 메인 화면 표시
+            document.getElementById("room_buttons").style.display = "none"; // 나가기 버튼 숨김
+        });
+
+
+    </script>
+
+</body>
 
 </html>
