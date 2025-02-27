@@ -87,9 +87,17 @@ io.on('connection', (socket) => {
   // 사용자 이름을 socket 객체에 저장
   socket.playerName = name;
 
+  // 플레이어 데이터 저장
+  socket.playerData = {
+    name: name,
+    userkey: userkey,
+    money: nyang // 게임 머니 저장
+  };
+
   socket.emit('welcome', {
     id: socket.id,
-    username: name
+    username: name,
+    money: socket.playerData.money,
   });
 
   socket.on('room_join', ({ id }) => {
@@ -209,8 +217,10 @@ io.on('connection', (socket) => {
       console.log(`방 ${id}에 대한 기존 게임 없음, 새 게임 생성`);
       game.set(id, new Game());
     } else {
-      console.log(`방 ${id}의 기존 게임 초기화 후 다시 시작`);
+      console.log(`방 ${id}의 기존 게임을 유지하며 다시 시작`);
+      let oldUserMoney = game.get(id).userMoney; // ✅ 기존 보유 금액 저장
       game.get(id).init();
+      game.get(id).userMoney = oldUserMoney; // ✅ 기존 보유 금액 유지
     }
 
     let users = Array.from(io.sockets.adapter.rooms.get(id) || []);
@@ -226,6 +236,7 @@ io.on('connection', (socket) => {
     // 모든 플레이어에게 새로운 게임이 시작되었음을 알림
     game.get(id).start(io, users);
   });
+
 
 
 
