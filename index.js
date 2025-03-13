@@ -83,26 +83,19 @@ const pool = new Pool({
 
 /**
  * 특정 유저에게 TTR 리워드를 지급하는 API 호출 함수
- * @param {string} userkey - 리워드를 받을 유저키
- * @param {number} nyangAmount - 냥코인 금액
+ * @param {string} userkey - 리워드를 받을 유저키 
  */
-async function RewoadToUser(userkey, nyangAmount) {
-  const apiUrl = 'https://svr.sotong.com/api/v1/games/result/initiation';
+async function RewoadToUser(userkey) {
+  const apiUrl = 'https://svr.sotong.com/api/v1/reward/game';
   const data = {
-    "gamers":
-      [
-        {
-          "userkey": userkey,
-          "nyangAmount": nyangAmount
-        }
-      ]
+    "userkey": userkey,
   };
 
   try {
     const response = await axios.post(apiUrl, data);
 
     if (response.status === 200) {
-      console.log(`리워드 지급 성공! 사용자: ${userkey}, 지급액: ${nyangAmount}`);
+      console.log(`리워드 지급 성공! 사용자: ${userkey}`);
       return;
     } else {
       console.error(`리워드 지급 실패 (상태 코드: ${response.status})`, response.data);
@@ -238,10 +231,9 @@ io.on('connection', (socket) => {
 
   // 🔹 1분마다 실행하는 함수 (연결된 유저별로 실행)
   const intervalId = setInterval(async () => {
-    const nyangAmount = 1000; // 지급할 금액
 
-    console.log(`1분마다 RewoadToUser() 실행 (유저: ${userkey}, 지급액: ${nyangAmount})`);
-    await RewoadToUser(userkey, nyangAmount);
+    console.log(`1분마다 RewoadToUser() 실행 (유저: ${userkey})`);
+    await RewoadToUser(userkey);
   }, 60000);
 
   socket.on("uuid_save", (gameUuid) => {
@@ -261,13 +253,13 @@ io.on('connection', (socket) => {
 
   socket.on("get_uuid", () => {
     if (socket.gameUuid) {
-        console.log(`🔹 유저(${socket.id})의 gameUuid 반환: ${socket.gameUuid}`);
-        socket.emit("uuid_response", socket.gameUuid);
+      console.log(`🔹 유저(${socket.id})의 gameUuid 반환: ${socket.gameUuid}`);
+      socket.emit("uuid_response", socket.gameUuid);
     } else {
-        console.warn(`⚠️ 유저(${socket.id})의 gameUuid 없음`);
-        socket.emit("uuid_response", null);
+      console.warn(`⚠️ 유저(${socket.id})의 gameUuid 없음`);
+      socket.emit("uuid_response", null);
     }
-});
+  });
 
   socket.emit('welcome', {
     id: socket.id,
