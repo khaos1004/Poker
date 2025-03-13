@@ -6,12 +6,110 @@ const Game = require('./game');
 const fs = require('fs');
 const axios = require('axios'); // axios 추가
 const path = require('path');
+const { Pool } = require('pg');
 
-// 🔹 SSL 인증서 파일 로드
-const options = {
-  // key: fs.readFileSync('/opt/game/black/porker/assets/ssl/KeyFile_Wildcard.sotong.com_pem.key'),
-  // cert: fs.readFileSync('/opt/game/black/porker/assets/ssl/Wildcard.sotong.com_pem.pem'),
-  // ca: fs.readFileSync('/opt/game/black/Blackjack/assets/ssl/intermediate.pem') 
+// PostgreSQL 연결 풀 설정
+const pool = new Pool({
+  user: 'postgres',
+  host: '1.201.161.233',
+  database: 'sotong',
+  password: 'postgres',
+  port: 5432,
+});
+
+
+// 🔹 1분마다 실행하여 TTR 리워드 지급
+// setInterval(async () => {
+//   console.log("🔄 1분마다 TTR 리워드 지급 실행...");
+
+//   try {
+//     const client = await pool.connect();
+
+//     // 🔹 1분마다 지급할 보상 조회
+//     const result = await client.query(`
+//           SELECT id, user_id, reward_amount 
+//           FROM ttr_rewards
+//           WHERE reward_time >= NOW() - INTERVAL '1 minute'
+//       `);
+
+//     if (result.rows.length === 0) {
+//       console.log(" 지급할 TTR 리워드 없음.");
+//       client.release();
+//       return;
+//     }
+
+//     for (let row of result.rows) {
+//       const { id, user_id, reward_amount } = row;
+
+//       // 🔹 현재 연결된 소켓에서 해당 유저의 `to_address` 가져오기
+//       let userSocket = [...io.sockets.sockets.values()].find(
+//         (s) => s.playerData?.userkey === user_id
+//       );
+//       let toAddress = userSocket?.playerData?.walletAddress;
+
+//       if (!toAddress) {
+//         console.error(`❌ 유저 ${user_id}의 지갑 주소 없음, 지급 건너뜀.`);
+//         continue;
+//       }
+
+//       // 🔹 API 호출하여 TTR 전송
+//       try {
+//         const response = await axios.post(
+//           'http://1.201.162.165:9000/api/v1/wallet_transfer_to_address',
+//           new URLSearchParams({
+//             amount_to_transfer: reward_amount.toString(),
+//             to_address: toAddress  // 🔹 유저별 `to_address` 적용
+//           }),
+//           {
+//             headers: {
+//               'Authorization': '1AA75CC269F33FB15479233CAC6705D2DD0016072F561E1547E4BF731C49C6FD',
+//               'Content-Type': 'application/x-www-form-urlencoded'
+//             }
+//           }
+//         );
+
+//         console.log(` 유저 ${user_id} TTR ${reward_amount} 지급 완료 (지갑: ${toAddress})`, response.data);
+
+//       } catch (error) {
+//         console.error(`❌ 유저 ${user_id} TTR 전송 실패 (지갑: ${toAddress}):`, error.response?.data || error.message);
+//       }
+//     }
+
+//     client.release();
+//   } catch (err) {
+//     console.error("❌ TTR 리워드 지급 중 오류 발생:", err);
+//   }
+// }, 60000);  // 🔄 1분마다 실행
+
+/**
+ * 특정 유저에게 TTR 리워드를 지급하는 API 호출 함수
+ * @param {string} userkey - 리워드를 받을 유저키
+ * @param {number} nyangAmount - 냥코인 금액
+ */
+async function RewoadToUser(userkey, nyangAmount) {
+  const apiUrl = 'https://svr.sotong.com/api/v1/games/result/initiation';
+  const data = {
+    "gamers":
+      [
+        {
+          "userkey": userkey,
+          "nyangAmount": nyangAmount
+        }
+      ]
+  };
+
+  try {
+    const response = await axios.post(apiUrl, data);
+
+    if (response.status === 200) {
+      console.log(`리워드 지급 성공! 사용자: ${userkey}, 지급액: ${nyangAmount}`);
+      return;
+    } else {
+      console.error(`리워드 지급 실패 (상태 코드: ${response.status})`, response.data);
+    }
+  } catch (error) {
+    console.error(` 리워드 지급 API 호출 오류 ${error}`);
+  }
 }
 
 // const server = https.createServer(options, app);
@@ -69,20 +167,7 @@ io.on('connection', (socket) => {
   const name = urlParams.get('name');
   const userkey = urlParams.get('userkey');
   const nyang = urlParams.get('nyang');
-
-  // 1분마다 API 요청 보내기
-  // const intervalId = setInterval(async () => {
-  //   try {
-  //     const response = await axios.post('https://svr.sotong.com/api/v1/rewards/game', {
-  //     // const response = await axios.post('http://localhost:8080/api/v1/rewards/game', {
-  //     });
-  //     console.log(`API Response for ${socket.id}:`, response.data);
-  //     // 소켓에 API 응답 보내기 (옵션)
-  //     // socket.emit('api_data', response.data);
-  //   } catch (error) {
-  //     console.error(`API request failed for ${socket.id}:`, error.message);
-  //   }
-  // }, 60000); // 60,000ms = 1분
+  const walletAddress = urlParams.get('to_address'); // 🔹 유저의 지갑 주소
 
   // 사용자 이름을 socket 객체에 저장
   socket.playerName = name;
@@ -91,8 +176,98 @@ io.on('connection', (socket) => {
   socket.playerData = {
     name: name,
     userkey: userkey,
-    money: nyang // 게임 머니 저장
+    money: nyang, // 게임 머니 저장
+    walletAddress: walletAddress
   };
+
+  // socket.on('reward_user', async (userId) => {
+  //   try {
+  //     const result = await pool.query(`
+  //           SELECT * FROM ttr_rewards 
+  //           WHERE user_id = $1
+  //           ORDER BY reward_time DESC
+  //       `, [userId]);
+
+  //     socket.emit('reward_user_response', { rewards: result.rows });
+  //   } catch (err) {
+  //     console.error(" 보상 조회 실패:", err);
+  //     socket.emit('reward_user_response', { error: "보상 정보를 가져올 수 없습니다." });
+  //   }
+  // });
+
+  // // 🔹 하루 동안 지급된 총 보상 조회
+  // socket.on('reward_status', async () => {
+  //   try {
+  //     const result = await pool.query(`
+  //           SELECT COALESCE(SUM(reward_amount), 0) AS total_reward_paid 
+  //           FROM ttr_rewards
+  //           WHERE reward_time >= NOW() - INTERVAL '1 day'
+  //       `);
+  //     socket.emit('reward_status_response', { totalRewardPaid: result.rows[0].total_reward_paid });
+  //   } catch (err) {
+  //     console.error(" 보상 조회 실패:", err);
+  //     socket.emit('reward_status_response', { error: "보상 정보를 가져올 수 없습니다." });
+  //   }
+  // });
+
+  // // 🔹 특정 유저에게 TTR 지급
+  // socket.on('reward_pay', async ({ userId, rewardAmount }) => {
+  //   if (!userId || !rewardAmount) {
+  //     socket.emit('reward_pay_response', { error: "userId와 rewardAmount가 필요합니다." });
+  //     return;
+  //   }
+
+  //   try {
+  //     //  보상 지급 내역 DB에 저장
+  //     await pool.query(`
+  //           INSERT INTO ttr_rewards (user_id, reward_amount) 
+  //           VALUES ($1, $2)
+  //       `, [userId, rewardAmount]);
+
+  //     console.log(` ${userId}에게 ${rewardAmount} TTR 지급 완료`);
+
+  //     //  실제 TTR 지급 로직 (외부 API 호출 가능)
+  //     // 예제: axios.post('https://external-api.com/ttr/transfer', { userId, amount: rewardAmount });
+
+  //     socket.emit('reward_pay_response', { success: true, message: "TTR 지급 완료" });
+  //   } catch (err) {
+  //     console.error(" TTR 지급 실패:", err);
+  //     socket.emit('reward_pay_response', { error: "TTR 지급 중 오류가 발생했습니다." });
+  //   }
+  // });
+
+  // 🔹 1분마다 실행하는 함수 (연결된 유저별로 실행)
+  const intervalId = setInterval(async () => {
+    const nyangAmount = 1000; // 지급할 금액
+
+    console.log(`1분마다 RewoadToUser() 실행 (유저: ${userkey}, 지급액: ${nyangAmount})`);
+    await RewoadToUser(userkey, nyangAmount);
+  }, 60000);
+
+  socket.on("uuid_save", (gameUuid) => {
+    console.log(` 유저(${socket.id})의 gameUuid 저장: ${gameUuid}`);
+    socket.gameUuid = gameUuid;
+  });
+
+
+  socket.on("uuid_response", (gameUuid) => {
+    if (gameUuid) {
+      console.log(` 서버에서 받은 gameUuid: ${gameUuid}`);
+      storedGameUuid = gameUuid; // 🔹 변수에 저장
+    } else {
+      console.warn("서버에서 gameUuid를 찾을 수 없음.");
+    }
+  });
+
+  socket.on("get_uuid", () => {
+    if (socket.gameUuid) {
+        console.log(`🔹 유저(${socket.id})의 gameUuid 반환: ${socket.gameUuid}`);
+        socket.emit("uuid_response", socket.gameUuid);
+    } else {
+        console.warn(`⚠️ 유저(${socket.id})의 gameUuid 없음`);
+        socket.emit("uuid_response", null);
+    }
+});
 
   socket.emit('welcome', {
     id: socket.id,
@@ -126,7 +301,7 @@ io.on('connection', (socket) => {
   });
 
 
-  // ✅ 방을 나갈 때 정확하게 목록에서 제거
+  //  방을 나갈 때 정확하게 목록에서 제거
   socket.on('room_leave', ({ id }) => {
     console.log(`방 나가기 요청: ${socket.id} (${socket.playerName}) -> ROOM ID<${id}>`);
 
@@ -218,9 +393,9 @@ io.on('connection', (socket) => {
       game.set(id, new Game());
     } else {
       console.log(`방 ${id}의 기존 게임을 유지하며 다시 시작`);
-      let oldUserMoney = game.get(id).userMoney; // ✅ 기존 보유 금액 저장
+      let oldUserMoney = game.get(id).userMoney; //  기존 보유 금액 저장
       game.get(id).init();
-      game.get(id).userMoney = oldUserMoney; // ✅ 기존 보유 금액 유지
+      game.get(id).userMoney = oldUserMoney; //  기존 보유 금액 유지
     }
 
     let users = Array.from(io.sockets.adapter.rooms.get(id) || []);

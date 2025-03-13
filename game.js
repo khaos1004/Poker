@@ -2,6 +2,12 @@
 const Result = require('./result');
 const axios = require('axios'); // axios 추가
 
+let dailyTotalDealerTips = 0;
+let dailyTotalGameMinutes = 0;
+let totalRewardPaid = 0;
+let minTTRPerMinute = 16.6;
+let storedGameUuid = null; // 🔹 `gameUuid`를 저장할 변수
+
 module.exports = class Game {
 
     init() {
@@ -287,15 +293,90 @@ module.exports = class Game {
 
         this.updateBettingInfo(io, roomId, userId, userList, userId, type);
     }
-    
+
+    // async gameOver(io, roomId, userList, userCard, startTime) {
+    //     console.log("game over!!!");
+
+    //     let totalDealerTip = this.pot * 0.05; // 💰 딜러팁 5% 차감
+    //     let gameDurationMinutes = 10;
+    //     socket.emit("get_uuid"); // 🔹 서버에 저장된 `gameUuid` 요청
+
+    //     try {
+    //         const client = await pool.connect();
+
+    //         // 🔹 1일 총 딜러팁 & 게임 시간 조회
+    //         const totalData = await client.query(`
+    //             SELECT 
+    //                 COALESCE(SUM(total_dealer_tips), 0) AS daily_dealer_tips,
+    //                 COALESCE(SUM(EXTRACT(EPOCH FROM total_play_time) / 60), 0) AS daily_game_minutes
+    //             FROM game_sessions
+    //             WHERE start_time >= NOW() - INTERVAL '1 day'
+    //         `);
+
+    //         let dailyTotalDealerTips = totalData.rows[0].daily_dealer_tips;
+    //         let dailyTotalGameMinutes = totalData.rows[0].daily_game_minutes;
+
+    //         // 🔹 TTR 1분당 지급 계산
+    //         let ttrPerMinute = (dailyTotalDealerTips * 0.7) / dailyTotalGameMinutes / 100000;
+
+    //         // 🔹 50만원 지급 여부 확인
+    //         const totalRewardPaidData = await client.query(`
+    //             SELECT COALESCE(SUM(reward_amount), 0) AS total_reward_paid
+    //             FROM ttr_rewards
+    //             WHERE reward_time >= NOW() - INTERVAL '1 day'
+    //         `);
+    //         let totalRewardPaid = totalRewardPaidData.rows[0].total_reward_paid;
+
+    //         // 🔹 50만원 초과한 적이 있는지 확인
+    //         let hasExceeded50k = totalRewardPaid >= 500000;
+
+    //         // 🔹 50만원 초과 전이면 최소 지급 1분당 16.6원 적용
+    //         if (!hasExceeded50k && ttrPerMinute < 16.6) {
+    //             ttrPerMinute = 16.6;
+    //         }
+
+    //         // 🔹 게임 세션 저장
+    //         await client.query(`
+    //             INSERT INTO game_sessions (room_id, start_time, end_time, total_play_time, total_dealer_tips, ttr_per_minute)
+    //             VALUES ($1, $2, NOW(), $3, $4, $5)
+    //         `, [roomId, startTime, `${gameDurationMinutes} minutes`, totalDealerTip, ttrPerMinute]);
+
+    //         console.log(" 게임 세션 저장 완료");
+
+    //         // 🔹 **TTR 보상 지급 내역 저장**
+    //         for (let user of userList) {
+    //             let userId = io.sockets.sockets.get(user)?.playerData?.userkey || "unknown";
+    //             let rewardAmount = gameDurationMinutes * ttrPerMinute;
+
+    //             if (totalRewardPaid + rewardAmount > 500000) {
+    //                 console.log(` 50만원 초과하여 ${userId}에게 지급 중단.`);
+    //                 continue;
+    //             }
+
+    //             await client.query(`
+    //                 INSERT INTO ttr_rewards (user_id, reward_amount)
+    //                 VALUES ($1, $2)
+    //             `, [userId, rewardAmount]);
+
+    //             console.log(` [보상 기록] 유저 ${userId} - ${rewardAmount} TTR`);
+    //         }
+
+    //         console.log(" 보상 지급 내역 저장 완료");
+    //         client.release();
+    //     } catch (err) {
+    //         console.error(" 데이터베이스 오류:", err);
+    //     }
 
     gameOver(io, roomId, userList, userCard) {
         console.log("game over!!!");
 
-        let winner = null;
-        let resultData = [];
+        let winner;
+        let totalPot = this.pot; // 현재 팟 머니
+        let dealerTip = Math.floor(totalPot * 0.05); // 팟 머니의 5% (소수점 버림)
+        let winnerAmount = totalPot - dealerTip; // 나머지를 승자에게 지급
+        socket.emit("get_uuid"); // 🔹 서버에 저장된 `gameUuid` 요청
 
-        for (let u of userList) {
+        for (var u of userList) {
             if (this.callList[u] < 0) {
                 continue;
             }
@@ -304,12 +385,12 @@ module.exports = class Game {
             let win = 0;
 
             r1.calc();
-            for (let u2 of userList) {
+            for (var u2 of userList) {
                 if (this.callList[u2] < 0) {
                     win += 1;
                     continue;
                 }
-                if (u === u2) {
+                if (u == u2) {
                     continue;
                 }
                 let cards2 = userCard[u2];
@@ -320,57 +401,44 @@ module.exports = class Game {
                     win += 1;
                 }
             }
-
-            if (win === userList.length - 1) {
+            console.log(`winnner info : user ${u}  win ${win}  userlist len  ${userList.length}`);
+            if (win == userList.length - 1) {
                 winner = u;
             }
         }
 
-        // 🛠️ 승자 보유 금액 업데이트 (이 코드가 API 요청 전에 먼저 실행되어야 함)
-        if (winner) {
-            console.log(`winner is ${winner}`);
-            console.log(`이전 보유 금액: ${this.userMoney[winner]}`);
-            console.log(`팟 머니: ${this.pot}`);
+        const requestData = {
+            gameId: storedGameUuid,
+            dealerTipAmount: dealerTip.toFixed(2) // 🔹 서버에 실제 차감된 딜러팁 전송
+        };
 
-            this.userMoney[winner] += this.pot;
-
-            console.log(`승리 후 보유 금액: ${this.userMoney[winner]}`); // ✅ 여기 확인
-        }
-
-        // 🛠️ 최신 보유 금액을 반영하여 resultData 생성
-        for (let u of userList) {
-            console.log(`플레이어 ${u} 최종 보유 금액: ${this.userMoney[u]}`);
-
-            resultData.push({
-                userkey: io.sockets.sockets.get(u)?.playerData?.userkey || "unknown",
-                nyangAmount: this.userMoney[u] || 0
-            });
-        }
-
-        // 🛠️ API 요청 직전 최종 로그 추가
-        console.log('API 요청 데이터 (전송 직전):', JSON.stringify(resultData, null, 2));
-
-        // 게임 결과 API 호출
-        axios.post('https://svr.sotong.com/api/v1/games/result', { gamers: resultData }, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
+        fetch('https://svr.sotong.com/api/v1/games/termination', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData)
         })
-            .then(response => {
-                console.log('게임 결과 API 응답:', response.data);
-            })
-            .catch(error => {
-                console.error('게임 결과 API 호출 중 에러 발생:', error);
-            });
+            .then(response => response.json())
+            .then(data => console.log('서버 응답:', data))
+            .catch(error => console.error('에러 발생:', error));
 
-        // 모든 유저의 최신 보유 금액을 클라이언트로 전달
+        console.log(`winner is ${winner}`);
+        console.log(`💰 총 팟: ${totalPot}, 🏦 딜러 팁 (5%): ${dealerTip}, 🏆 승리자 금액: ${winnerAmount}`);
+
+        // 승자에게 팟 머니 지급 (5% 제외)
+        if (winner) {
+            this.userMoney[winner] += winnerAmount;
+        }
+
+        // 클라이언트에게 결과 전송
         io.sockets.in(roomId).emit('gameover', {
             userList: userList,
             userCard: userCard,
             winner: winner,
+            dealerTip: dealerTip, // 딜러 팁 정보 추가
             userMoney: this.userMoney
         });
 
+        // 팟 초기화
         this.pot = 0;
     }
 
