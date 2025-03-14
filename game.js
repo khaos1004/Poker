@@ -367,18 +367,102 @@ module.exports = class Game {
     //         console.error(" 데이터베이스 오류:", err);
     //     }
 
+    // gameOver(io, roomId, userList, userCard) {
+    //     console.log("game over!!!");
+
+    //     let winner;
+    //     let totalPot = this.pot; // 현재 팟 머니
+    //     let dealerTip = Math.floor(totalPot * 0.05); // 팟 머니의 5% (소수점 버림)
+    //     let winnerAmount = totalPot - dealerTip; // 나머지를 승자에게 지급
+
+    //     socket.emit("get_uuid"); // 🔹 서버에 저장된 `gameUuid` 요청
+
+    //     for (var u of userList) {
+    //         if (this.callList[u] < 0) {
+    //             continue;
+    //         }
+    //         let cards = userCard[u];
+    //         let r1 = new Result(cards);
+    //         let win = 0;
+
+    //         r1.calc();
+    //         for (var u2 of userList) {
+    //             if (this.callList[u2] < 0) {
+    //                 win += 1;
+    //                 continue;
+    //             }
+    //             if (u == u2) {
+    //                 continue;
+    //             }
+    //             let cards2 = userCard[u2];
+    //             let r2 = new Result(cards2);
+    //             r2.calc();
+
+    //             if (r1.compare(r2)) {
+    //                 win += 1;
+    //             }
+    //         }
+    //         console.log(`winnner info : user ${u}  win ${win}  userlist len  ${userList.length}`);
+    //         if (win == userList.length - 1) {
+    //             winner = u;
+    //         }
+    //     }
+
+    //     console.log(`🎉 승리자: ${winner}`);
+    //     console.log(`💰 총 팟: ${totalPot},  딜러 팁 (5%): ${dealerTip},  승리자 지급 금액: ${winnerAmount}`);
+
+    //     const requestData = {
+    //         gameId: storedGameUuid,
+    //         dealerTipAmount: dealerTip.toFixed(2) // 🔹 서버에 실제 차감된 딜러팁 전송
+    //     };
+
+    //     fetch('https://svr.sotong.com/api/v1/games/termination', {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify(requestData)
+    //     })
+    //         .then(response => {
+    //             if (response.status === 200) {
+    //                 console.log("호출 성공")
+    //             }
+    //         })
+    //         .catch(error => console.error('에러 발생:', error));
+
+    //     console.log(`winner is ${winner}`);
+    //     console.log(` 총 팟: ${totalPot},  딜러 팁 (5%): ${dealerTip},  승리자 금액: ${winnerAmount}`);
+
+    //     // 승자에게 팟 머니 지급 (5% 제외)
+    //     if (winner) {
+    //         this.userMoney[winner] += winnerAmount;
+    //     }
+
+    //     // 클라이언트에게 결과 전송
+    //     io.sockets.in(roomId).emit('gameover', {
+    //         userList: userList,
+    //         userCard: userCard,
+    //         winner: winner,
+    //         dealerTip: dealerTip, // 딜러 팁 정보 추가
+    //         userMoney: this.userMoney
+    //     });
+
+    //     // 팟 초기화
+    //     this.pot = 0;
+    // }
+
     gameOver(io, roomId, userList, userCard) {
         console.log("game over!!!");
 
         let winner;
-        let totalPot = this.pot; // 현재 팟 머니
-        let dealerTip = Math.floor(totalPot * 0.05); // 팟 머니의 5% (소수점 버림)
-        let winnerAmount = totalPot - dealerTip; // 나머지를 승자에게 지급
+        let totalPot = this.pot; // 총 팟 머니
+        let dealerTip = Math.floor(totalPot * 0.05); // 딜러 팁 (5% 차감)
+        let winnerAmount = totalPot - dealerTip; // 승리자가 가져갈 금액
+
         socket.emit("get_uuid"); // 🔹 서버에 저장된 `gameUuid` 요청
 
+        // 승리자 찾기
         for (var u of userList) {
             if (this.callList[u] < 0) {
-                continue;
+                continue; // 다이한 플레이어는 제외
             }
             let cards = userCard[u];
             let r1 = new Result(cards);
@@ -401,30 +485,63 @@ module.exports = class Game {
                     win += 1;
                 }
             }
-            console.log(`winnner info : user ${u}  win ${win}  userlist len  ${userList.length}`);
+
             if (win == userList.length - 1) {
                 winner = u;
             }
         }
 
-        const requestData = {
+        console.log(`🎉 승리자: ${winner}`);
+        console.log(`💰 총 팟: ${totalPot},  딜러 팁 (5%): ${dealerTip},  승리자 지급 금액: ${winnerAmount}`);
+
+        // **API 요청 데이터 준비**
+        const terminationData = {
             gameId: storedGameUuid,
-            dealerTipAmount: dealerTip.toFixed(2) // 🔹 서버에 실제 차감된 딜러팁 전송
+            dealerTipAmount: dealerTip.toFixed(2) // 승리자는 5% 포함
         };
+
+        let gamersData = [];
+
+        userList.forEach(user => {
+            let userData = {
+                userkey: io.sockets.sockets.get(user)?.playerData?.userkey || "unknown",
+                nyangAmount: this.userMoney[user], // 최종 잔액
+                dealerTipAmount: user === winner ? dealerTip.toFixed(2) : "0.00" // 승리자는 5%, 패배자는 0
+            };
+            gamersData.push(userData);
+        });
+
+        const nyangData = {
+            gamers: gamersData
+        };
+
+        // **승리자 & 패배자 API 호출**
+        fetch('https://svr.sotong.com/api/v1/games/result/initiation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nyangData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('게임 결과 API 응답:', data);
+            })
+            .catch(error => {
+                console.error('게임 결과 API 호출 실패:', error);
+            });
 
         fetch('https://svr.sotong.com/api/v1/games/termination', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData)
+            body: JSON.stringify(terminationData)
         })
-            .then(response => response.json())
-            .then(data => console.log('서버 응답:', data))
-            .catch(error => console.error('에러 발생:', error));
+            .then(response => {
+                if (response.status === 200) {
+                    console.log("게임 종료 API 호출 성공");
+                }
+            })
+            .catch(error => console.error('게임 종료 API 호출 실패:', error));
 
-        console.log(`winner is ${winner}`);
-        console.log(`💰 총 팟: ${totalPot}, 🏦 딜러 팁 (5%): ${dealerTip}, 🏆 승리자 금액: ${winnerAmount}`);
-
-        // 승자에게 팟 머니 지급 (5% 제외)
+        // 승리자에게 팟 머니 지급 (5% 제외)
         if (winner) {
             this.userMoney[winner] += winnerAmount;
         }
@@ -441,5 +558,6 @@ module.exports = class Game {
         // 팟 초기화
         this.pot = 0;
     }
+
 
 }
