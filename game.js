@@ -105,8 +105,11 @@ module.exports = class Game {
                 level: myLevel
             });
         }
+        console.log("userCard2 데이터 확인:", userCard2);
+
         io.sockets.in(roomId).emit('give_user_card_info', {
             cards: userCard2
+            
         });
         console.log('GIVE END');
 

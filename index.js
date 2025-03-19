@@ -153,6 +153,9 @@ app.get('/', (req, res) => {
   // res.sendFile(__dirname + '/index2.html');
 });
 
+let userActivityTimers = new Map();  // 유저별 활동 감지 타이머
+let rewardIntervals = new Map();     // 유저별 리워드 인터벌 관리
+
 io.on('connection', (socket) => {
 
   const referer = socket.handshake.headers.referer;
@@ -230,11 +233,53 @@ io.on('connection', (socket) => {
   // });
 
   // 🔹 1분마다 실행하는 함수 (연결된 유저별로 실행)
-  const intervalId = setInterval(async () => {
+  // const intervalId = setInterval(async () => {
 
-    console.log(`1분마다 RewoadToUser() 실행 (유저: ${userkey})`);
-    await RewoadToUser(userkey);
-  }, 60000);
+  //   console.log(`1분마다 RewoadToUser() 실행 (유저: ${userkey})`);
+  //   await RewoadToUser(userkey);
+  // }, 60000);
+
+  function startRewardInterval() {
+    stopRewardInterval(); // 기존 인터벌이 있다면 정리
+    const intervalId = setInterval(async () => {
+      console.log(`1분마다 RewoadToUser() 실행 (유저: ${userkey})`);
+      await RewoadToUser(userkey);
+    }, 60000);
+    rewardIntervals.set(userkey, intervalId);
+  }
+
+  function stopRewardInterval() {
+    if (rewardIntervals.has(userkey)) {
+      clearInterval(rewardIntervals.get(userkey));
+      rewardIntervals.delete(userkey);
+      console.log(`⏸️ 리워드 지급 중지 (유저: ${userkey})`);
+    }
+  }
+
+  function resetActivityTimer() {
+    if (userActivityTimers.has(userkey)) {
+      clearTimeout(userActivityTimers.get(userkey));
+    }
+    
+    userActivityTimers.set(userkey, setTimeout(() => {
+      console.log(`🛑 3분간 활동 없음. 리워드 중지 (유저: ${userkey})`);
+      stopRewardInterval();
+    }, 180000)); // 3분(180000ms) 동안 아무 활동이 없으면 실행
+  }
+
+  // 최초 연결 시 리워드 지급 시작
+  startRewardInterval();
+  resetActivityTimer();
+
+  socket.on("user_activity", () => {
+    console.log(`🔄 활동 감지: 리워드 지급 계속 (유저: ${userkey})`);
+    resetActivityTimer();
+
+    if (!rewardIntervals.has(userkey)) {
+      console.log(`▶️ 다시 리워드 지급 시작 (유저: ${userkey})`);
+      startRewardInterval();
+    }
+  });
 
   socket.on("uuid_save", (gameUuid) => {
     console.log(` 유저(${socket.id})의 gameUuid 저장: ${gameUuid}`);
@@ -423,7 +468,8 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log("a user disconnected, " + socket.id);
-    clearInterval(intervalId);
+    stopRewardInterval();
+    userActivityTimers.delete(userkey);
   });
 
 });
