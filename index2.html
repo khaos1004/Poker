@@ -1128,9 +1128,17 @@
         });
         
 
-        function sendUserActivity() {
-            socket.emit("user_activity");
+        
+    function sendUserActivity() {
+        const now = Date.now(); // 🔹 현재 시간 (밀리초)
+
+        if (now - lastActivityTime < 5000) {
+            return; // 🔹 5초가 지나지 않았다면 실행하지 않음
         }
+
+        lastActivityTime = now; // 🔹 마지막 실행 시간 업데이트
+        socket.emit("user_activity");
+    }
 
         // 마우스 움직임 감지
         document.addEventListener("mousemove", sendUserActivity);

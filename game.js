@@ -19,7 +19,7 @@ module.exports = class Game {
         this.betCntList = {};
         this.maxCall = 0;
         this.pot = 0;
-        this.defaultPrice = 100;
+        this.defaultPrice = 2000000;
         this.defaultCount = 1;
         if (!this.userMoney) {
             this.userMoney = {}; // 기존 값이 없을 때만 초기화
