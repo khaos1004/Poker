@@ -1126,14 +1126,7 @@
         socket.on("gameover", ({ userMoney }) => {
             $('#my-money').html(`${userMoney[myId]}냥`);
         });
-
-
-
-
-    </script>
-
-    <script>
-        var socket = io();
+        
 
         function sendUserActivity() {
             socket.emit("user_activity");
@@ -1147,7 +1140,10 @@
 
         // `betting_box` 내부 버튼 클릭 감지
         document.getElementById("betting_box").addEventListener("click", sendUserActivity);
+
+
     </script>
+
 
 </body>
 

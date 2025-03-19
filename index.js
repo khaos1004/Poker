@@ -87,21 +87,17 @@ const pool = new Pool({
  */
 async function RewoadToUser(userkey) {
   const apiUrl = 'https://svr.sotong.com/api/v1/reward/game';
-  const data = {
-    "userkey": userkey,
-  };
+  const data = { "userkey": userkey };
 
   try {
     const response = await axios.post(apiUrl, data);
-
     if (response.status === 200) {
-      console.log(`리워드 지급 성공! 사용자: ${userkey}`);
-      return;
+      console.log(`✅ 리워드 지급 성공! 사용자: ${userkey}`);
     } else {
-      console.error(`리워드 지급 실패 (상태 코드: ${response.status})`, response.data);
+      console.error(`❌ 리워드 지급 실패 (상태 코드: ${response.status})`, response.data);
     }
   } catch (error) {
-    console.error(` 리워드 지급 API 호출 오류 ${error}`);
+    console.error(`🚨 리워드 지급 API 호출 오류 ${error}`);
   }
 }
 
@@ -176,6 +172,12 @@ io.on('connection', (socket) => {
     walletAddress: walletAddress
   };
 
+  if (!userkey) {
+    console.error("❌ 유저 키 없음. 연결 종료");
+    socket.disconnect();
+    return;
+  }
+
   // socket.on('reward_user', async (userId) => {
   //   try {
   //     const result = await pool.query(`
@@ -232,17 +234,14 @@ io.on('connection', (socket) => {
   //   }
   // });
 
-  // 🔹 1분마다 실행하는 함수 (연결된 유저별로 실행)
-  // const intervalId = setInterval(async () => {
-
-  //   console.log(`1분마다 RewoadToUser() 실행 (유저: ${userkey})`);
-  //   await RewoadToUser(userkey);
-  // }, 60000);
-
   function startRewardInterval() {
-    stopRewardInterval(); // 기존 인터벌이 있다면 정리
+    if (rewardIntervals.has(userkey)) {
+      console.log(`⏳ 이미 실행 중인 리워드 지급이 있음 (유저: ${userkey})`);
+      return;
+    }
+    console.log(`▶️ 1분마다 리워드 지급 시작 (유저: ${userkey})`);
     const intervalId = setInterval(async () => {
-      console.log(`1분마다 RewoadToUser() 실행 (유저: ${userkey})`);
+      console.log(`🔄 1분마다 RewoadToUser() 실행 (유저: ${userkey})`);
       await RewoadToUser(userkey);
     }, 60000);
     rewardIntervals.set(userkey, intervalId);
@@ -260,9 +259,9 @@ io.on('connection', (socket) => {
     if (userActivityTimers.has(userkey)) {
       clearTimeout(userActivityTimers.get(userkey));
     }
-    
+
     userActivityTimers.set(userkey, setTimeout(() => {
-      console.log(`🛑 3분간 활동 없음. 리워드 중지 (유저: ${userkey})`);
+      console.log(`🛑 3분간 활동 없음. 리워드 지급 중지 (유저: ${userkey})`);
       stopRewardInterval();
     }, 180000)); // 3분(180000ms) 동안 아무 활동이 없으면 실행
   }
